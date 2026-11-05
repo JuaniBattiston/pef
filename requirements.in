@@ -3,3 +3,4 @@
 # Editar este archivo y regenerar el lock con:  make lock
 fastapi
 uvicorn
+urllib3==2.4.0  # DEMO: version con vulnerabilidades conocidas (corregidas en 2.5+)
