@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os  # DEMO: import sin usar
 import time
 from collections.abc import Callable
 
