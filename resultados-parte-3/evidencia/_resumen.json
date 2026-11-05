@@ -1,0 +1,105 @@
+[
+  {
+    "pr": 2,
+    "control": "Pruebas",
+    "job": "4 · pruebas y cobertura (py3.12)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117804971/job/127563181145",
+    "merge": "BLOCKED",
+    "archivo": "02-pruebas.md",
+    "otros_fallos": [
+      "4 · pruebas y cobertura (py3.14)"
+    ]
+  },
+  {
+    "pr": 3,
+    "control": "Cobertura",
+    "job": "4 · pruebas y cobertura (py3.12)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117814807/job/127562736163",
+    "merge": "BLOCKED",
+    "archivo": "03-cobertura.md",
+    "otros_fallos": [
+      "4 · pruebas y cobertura (py3.14)"
+    ]
+  },
+  {
+    "pr": 4,
+    "control": "Análisis estático",
+    "job": "3 · lint (ruff, pylint)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117830244/job/127562496807",
+    "merge": "BLOCKED",
+    "archivo": "04-lint.md",
+    "otros_fallos": []
+  },
+  {
+    "pr": 5,
+    "control": "Tipado",
+    "job": "3 · tipado (mypy)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117840090/job/127562334811",
+    "merge": "BLOCKED",
+    "archivo": "05-tipado.md",
+    "otros_fallos": []
+  },
+  {
+    "pr": 6,
+    "control": "Complejidad",
+    "job": "3 · complejidad (radon, xenon)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117853132/job/127562426800",
+    "merge": "BLOCKED",
+    "archivo": "06-complejidad.md",
+    "otros_fallos": []
+  },
+  {
+    "pr": 7,
+    "control": "Seguridad (código)",
+    "job": "3 · seguridad del codigo (bandit)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117865175/job/127562451416",
+    "merge": "BLOCKED",
+    "archivo": "07-seguridad-codigo.md",
+    "otros_fallos": []
+  },
+  {
+    "pr": 8,
+    "control": "Seguridad (secretos)",
+    "job": "3 · secretos (gitleaks)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117880350/job/127562811954",
+    "merge": "BLOCKED",
+    "archivo": "08-secretos.md",
+    "otros_fallos": []
+  },
+  {
+    "pr": 9,
+    "control": "Seguridad (dependencias)",
+    "job": "5 · dependencias (pip-audit)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117925922/job/127563565914",
+    "merge": "BLOCKED",
+    "archivo": "09-dependencias.md",
+    "otros_fallos": []
+  },
+  {
+    "pr": 10,
+    "control": "Documentación",
+    "job": "5 · documentacion (mkdocs, markdownlint, lychee)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117892072/job/127563345374",
+    "merge": "BLOCKED",
+    "archivo": "10-documentacion.md",
+    "otros_fallos": []
+  },
+  {
+    "pr": 11,
+    "control": "Benchmark",
+    "job": "6 · rendimiento (benchmark, memoria, profiling)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117913067/job/127563959230",
+    "merge": "BLOCKED",
+    "archivo": "11-benchmark.md",
+    "otros_fallos": []
+  },
+  {
+    "pr": 12,
+    "control": "Memoria",
+    "job": "6 · rendimiento (benchmark, memoria, profiling)",
+    "link": "https://github.com/JuaniBattiston/pef/actions/runs/42117915974/job/127563967148",
+    "merge": "BLOCKED",
+    "archivo": "12-memoria.md",
+    "otros_fallos": []
+  }
+]
