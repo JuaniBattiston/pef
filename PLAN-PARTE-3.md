@@ -1,7 +1,9 @@
 # Plan — Tercer Parcial: documentación externa + CI
 
-> **Estado (2026-11-05):** pasos 1-6 hechos (repo, locks, mypy, Makefile,
-> rendimiento, workflow). Faltan 7 (branch protection), 8 (MkDocs) y 9 (evidencia).
+> **Estado (2026-11-05): ejecutado.** Los 9 pasos están hechos. Documentación en
+> <https://juanibattiston.github.io/pef/>, evidencia en `resultados-parte-3/`.
+> Cambios respecto del plan: pip-audit bloquea toda vulnerabilidad (no filtra por
+> CVSS); gitleaks escanea el historial del commit que se integra (`HEAD`, no `--all`).
 
 > Criterio rector (igual que en la parte 2): **simple y reproducible**.
 > Cada control es **un comando** que corre igual en la máquina local y en el CI.

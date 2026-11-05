@@ -94,3 +94,26 @@ Cómo resolver cada fallo: [Mantenimiento](mantenimiento.md#resolver-fallos-del-
 - `persist-credentials: false` en cada checkout: el token no queda en `.git/config`.
 - Binarios descargados (gitleaks, lychee) con versión fija y **checksum verificado**.
 - Los workflows se analizan con CodeQL (`language: actions`).
+
+## Evidencia: cada control rechaza
+
+Para cada control se abrió un PR con una ruptura que incumple ese control y ningún otro.
+Los 11 fueron rechazados por el job correspondiente y quedaron bloqueados por la
+protección de `main`. Un push directo a `main` también es rechazado.
+
+| Control | PR | Motivo del rechazo |
+| --- | --- | --- |
+| Pruebas | [#2](https://github.com/JuaniBattiston/pef/pull/2) | 10 pruebas fallan contra el oráculo |
+| Cobertura | [#3](https://github.com/JuaniBattiston/pef/pull/3) | 77,85 % < 90 % |
+| Análisis estático | [#4](https://github.com/JuaniBattiston/pef/pull/4) | Ruff F401 |
+| Tipado | [#5](https://github.com/JuaniBattiston/pef/pull/5) | mypy: tipo de retorno incompatible |
+| Complejidad | [#6](https://github.com/JuaniBattiston/pef/pull/6) | rango D > C |
+| Seguridad (código) | [#7](https://github.com/JuaniBattiston/pef/pull/7) | Bandit B602, severidad alta |
+| Seguridad (secretos) | [#8](https://github.com/JuaniBattiston/pef/pull/8) | gitleaks: 1 secreto |
+| Seguridad (dependencias) | [#9](https://github.com/JuaniBattiston/pef/pull/9) | pip-audit: 14 vulnerabilidades |
+| Documentación | [#10](https://github.com/JuaniBattiston/pef/pull/10) | enlace roto en modo estricto |
+| Benchmark | [#11](https://github.com/JuaniBattiston/pef/pull/11) | mediana +168 % > 25 % |
+| Memoria | [#12](https://github.com/JuaniBattiston/pef/pull/12) | 106 % del límite |
+
+Detalle, extractos de los logs y los dos fallos reales que frenó el pipeline:
+[`resultados-parte-3/`](https://github.com/JuaniBattiston/pef/tree/d04b72f4b222cdf4179672d0eec4de485d5d40f3/resultados-parte-3).
