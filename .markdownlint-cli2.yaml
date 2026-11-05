@@ -1,0 +1,12 @@
+# markdownlint-cli2: estilo de la documentacion (make docs).
+config:
+  default: true
+  MD013: false        # largo de linea: las tablas y los parrafos largos son legibles asi
+  MD024:
+    siblings_only: true   # se permiten titulos repetidos en secciones distintas
+  MD033: false        # HTML embebido (lo usa Material para iconos/tarjetas)
+  MD051: false       # anclajes: los valida mkdocs --strict (que quita los acentos al generarlos)
+  MD046:
+    style: fenced
+globs:
+  - "docs/**/*.md"

@@ -29,9 +29,9 @@ ruff check .
 ruff format --check .
 pausa
 
-paso "Documentacion (punto 6): Sphinx"
-sphinx-build -q -b html docs docs/_build/html
-echo "  -> docs/_build/html/index.html"
+paso "Documentacion: MkDocs (reemplazo de Sphinx en la parte 3)"
+python -m mkdocs build -q --strict --site-dir "$TMP/site"
+echo "  -> publicada en https://juanibattiston.github.io/pef/"
 pausa
 
 paso "APM (punto 3): Pyroscope"

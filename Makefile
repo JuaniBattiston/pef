@@ -22,6 +22,8 @@ REPORTS := reports
 # Herramientas que no son de Python: binario local si existe, si no, contenedor.
 CONTAINER ?= $(shell command -v podman || command -v docker)
 GITLEAKS_IMAGE := docker.io/zricethezav/gitleaks:v8.30.1
+LYCHEE_IMAGE   := docker.io/lycheeverse/lychee:0.24.2
+MDLINT         := npx --yes markdownlint-cli2@0.24.0
 
 # --- umbrales (politica de aprobacion / rechazo) -----------------------------
 COV_MIN        := 90   # % minimo de cobertura de src/
@@ -47,7 +49,7 @@ BENCH_OPTS := bench/test_benchmarks.py -p no:cacheprovider --benchmark-only \
 PROFILE_ARGS := -m src.cli lote --family grid --size 16000 --n 100 --modo secuencial
 
 .PHONY: help setup lock ci lint types complexity test sec-code secrets sec-deps \
-  bench bench-baseline memory profile clean
+  docs bench bench-baseline memory profile clean
 
 help: ## Lista los targets disponibles
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -113,6 +115,20 @@ sec-deps: | $(REPORTS) ## pip-audit sobre las dependencias fijadas
 	$(PY) -m pip_audit -r requirements-dev.txt --require-hashes --disable-pip $(PIP_AUDIT_IGNORE) \
 	  -f markdown --desc | tee $(REPORTS)/pip-audit.md
 
+# --- etapa 5: documentacion ---------------------------------------------------
+
+docs: | $(REPORTS) ## MkDocs --strict + markdownlint-cli2 + Lychee (enlaces)
+	$(PY) -m mkdocs build --strict --site-dir site
+	$(MDLINT)
+	@if command -v lychee >/dev/null; then \
+	  lychee --config lychee.toml --no-progress --format markdown --output $(REPORTS)/lychee.md docs README.md \
+	    && st=0 || st=$$?; \
+	else \
+	  $(CONTAINER) run --rm -v "$$PWD":/repo:Z -w /repo $(LYCHEE_IMAGE) \
+	    --config lychee.toml --no-progress --format markdown --output $(REPORTS)/lychee.md docs README.md \
+	    && st=0 || st=$$?; \
+	fi; cat $(REPORTS)/lychee.md; exit $$st
+
 # --- etapa 6: rendimiento y memoria -------------------------------------------
 
 bench-baseline: ## Mide la linea base en BASE_REF (default main) con los benchmarks actuales
@@ -144,7 +160,7 @@ profile: | $(REPORTS) ## Perfil de CPU (pyinstrument + cProfile). Informativo, n
 
 # --- todo junto ----------------------------------------------------------------
 
-ci: lint types complexity sec-code secrets test sec-deps bench memory profile ## Todos los controles, en orden
+ci: lint types complexity sec-code secrets test sec-deps docs bench memory profile ## Todos los controles, en orden
 	@echo; echo "==> make ci: todos los controles aprobados"
 
 clean: ## Borra reportes y caches

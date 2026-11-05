@@ -1,0 +1,81 @@
+# Documentacion externa del proyecto (parte 3).
+# Construir: make docs   |   Ver en local: mkdocs serve   |   Publicada en GitHub Pages.
+site_name: Planificador de rutas — PEF
+site_description: Documentacion funcional, tecnica y operativa del planificador de rutas.
+site_url: https://juanibattiston.github.io/pef/
+repo_url: https://github.com/JuaniBattiston/pef
+repo_name: JuaniBattiston/pef
+edit_uri: edit/main/docs/
+copyright: Programacion Eficiente — tercer parcial
+
+# Cualquier advertencia (enlace roto, pagina fuera del menu, docstring invalido) es un error.
+strict: true
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+theme:
+  name: material
+  language: es
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.action.edit
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      toggle: {icon: material/weather-night, name: Modo oscuro}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      toggle: {icon: material/weather-sunny, name: Modo claro}
+
+nav:
+  - Inicio: index.md
+  - Arquitectura: arquitectura.md
+  - Instalacion y ejecucion: instalacion.md
+  - Diseno tecnico: diseno-tecnico.md
+  - API y contratos: api.md
+  - Pruebas: pruebas.md
+  - Rendimiento: rendimiento.md
+  - Seguridad: seguridad.md
+  - Integracion continua: ci.md
+  - Mantenimiento: mantenimiento.md
+
+plugins:
+  - search:
+      lang: es
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            show_source: false
+            show_root_heading: true
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: source
+            heading_level: 3
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

@@ -1,6 +1,14 @@
 # Planificador inteligente de rutas
 ### Primer Parcial – Programación Eficiente (Opción 1, Python)
 
+[![CI](https://github.com/JuaniBattiston/pef/actions/workflows/ci.yml/badge.svg)](https://github.com/JuaniBattiston/pef/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/JuaniBattiston/pef/actions/workflows/codeql.yml/badge.svg)](https://github.com/JuaniBattiston/pef/actions/workflows/codeql.yml)
+
+> **Documentación completa (parte 3):** <https://juanibattiston.github.io/pef/> —
+> arquitectura, instalación, diseño técnico, API, pruebas, rendimiento, seguridad,
+> integración continua y mantenimiento. Todos los controles del CI corren en local con
+> `make ci`.
+
 Aplicación que encuentra rutas óptimas sobre una red de puntos de entrega, construida
 como **banco de mediciones**: cada optimización es una variante activable por separado,
 de modo que la mejora se puede atribuir a una sola causa por vez.
