@@ -223,7 +223,9 @@ jobs:
           f=lychee-x86_64-unknown-linux-gnu.tar.gz
           curl -sSfL -o "$f" "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/$f"
           echo "${LYCHEE_SHA256}  $f" | sha256sum -c -
-          tar -xzf "$f" && sudo mv lychee /usr/local/bin/
+          # el binario viene dentro de una carpeta: lychee-x86_64-unknown-linux-gnu/lychee
+          tar -xzf "$f" --strip-components=1 lychee-x86_64-unknown-linux-gnu/lychee
+          sudo mv lychee /usr/local/bin/
       - run: make docs
         env:
           GITHUB_TOKEN: ${{ github.token }} # lychee: evita el rate limit de github.com
