@@ -1,0 +1,29 @@
+# Actualizaciones de dependencias (control "Dependencias").
+# Dependabot abre un PR por actualizacion; el CI completo decide si se integra.
+# Las alertas de seguridad (Dependabot alerts) se activan en Settings > Code security.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    cooldown:
+      default-days: 7 # no tomar versiones con menos de una semana
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      dev-tools:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    labels: [dependencias]
+
+  - package-ecosystem: github-actions
+    directory: /
+    cooldown:
+      default-days: 7 # no tomar versiones con menos de una semana
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: [dependencias, ci]

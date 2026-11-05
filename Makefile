@@ -21,7 +21,7 @@ REPORTS := reports
 
 # Herramientas que no son de Python: binario local si existe, si no, contenedor.
 CONTAINER ?= $(shell command -v podman || command -v docker)
-GITLEAKS_IMAGE := docker.io/zricethezav/gitleaks:v8.21.2
+GITLEAKS_IMAGE := docker.io/zricethezav/gitleaks:v8.30.1
 
 # --- umbrales (politica de aprobacion / rechazo) -----------------------------
 COV_MIN        := 90   # % minimo de cobertura de src/

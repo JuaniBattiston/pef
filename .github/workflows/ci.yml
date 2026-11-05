@@ -1,0 +1,270 @@
+# Pipeline de CI (parte 3).
+#
+# Cada control es un target del Makefile: el workflow no tiene logica propia,
+# solo decide el ORDEN y que corre en paralelo. Para reproducir un fallo en
+# local basta con correr el mismo `make <target>` (ver docs/mantenimiento.md).
+#
+# Etapas (de lo mas rapido a lo mas caro):
+#   1. integracion   push / pull request a main
+#   2. entorno       Python + dependencias fijadas con hashes (.github/actions/preparar)
+#   3. estatica      lint, types, complexity, sec-code, secrets      (en paralelo)
+#   4. pruebas       pytest + cobertura, en 3.12 y 3.14
+#   5. dependencias  pip-audit                                      (docs: paso 8)
+#   6. rendimiento   benchmark vs main, memoria, profiling
+#   7. resultado     tabla aprobado / rechazado + reportes como artefactos
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Un push nuevo a la misma rama/PR cancela la corrida anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.14"
+  FORCE_COLOR: "1"
+
+jobs:
+  # --- etapa 2 -----------------------------------------------------------------
+  entorno:
+    name: "2 · entorno reproducible"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: python -m pip freeze > pip-freeze.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: entorno
+          path: pip-freeze.txt
+
+  # --- etapa 3: calidad estatica (en paralelo) ------------------------------------
+  lint:
+    name: "3 · lint (ruff, pylint)"
+    needs: entorno
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+      - run: make lint
+      - if: always() && hashFiles('reports/ruff.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: reports/ruff.sarif
+          category: ruff
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-lint
+          path: reports/
+
+  types:
+    name: "3 · tipado (mypy)"
+    needs: entorno
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+      - run: make types
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-types
+          path: reports/
+
+  complexity:
+    name: "3 · complejidad (radon, xenon)"
+    needs: entorno
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+      - run: make complexity
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-complexity
+          path: reports/
+
+  sec-code:
+    name: "3 · seguridad del codigo (bandit)"
+    needs: entorno
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+      - run: make sec-code
+      - if: always() && hashFiles('reports/bandit.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: reports/bandit.sarif
+          category: bandit
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-sec-code
+          path: reports/
+
+  secrets:
+    name: "3 · secretos (gitleaks)"
+    needs: entorno
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      GITLEAKS_VERSION: "8.30.1"
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # todo el historial: un secreto borrado sigue en git
+      - name: Instalar gitleaks (version fija, checksum verificado)
+        run: |
+          f="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$f" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$f"
+          echo "${GITLEAKS_SHA256}  $f" | sha256sum -c -
+          tar -xzf "$f" gitleaks && sudo mv gitleaks /usr/local/bin/
+      - run: make secrets
+      - if: always() && hashFiles('reports/gitleaks.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: reports/gitleaks.sarif
+          category: gitleaks
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-secrets
+          path: reports/
+
+  # --- etapa 4: pruebas y cobertura ---------------------------------------------
+  test:
+    name: "4 · pruebas y cobertura (py${{ matrix.python }})"
+    needs: [lint, types, complexity, sec-code, secrets]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+        with:
+          python-version: ${{ matrix.python }}
+      - run: make test
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-test-py${{ matrix.python }}
+          path: reports/
+
+  # --- etapa 5: seguridad de dependencias y documentacion ----------------------------
+  sec-deps:
+    name: "5 · dependencias (pip-audit)"
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+      - run: make sec-deps
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-sec-deps
+          path: reports/
+
+  # --- etapa 6: rendimiento y memoria ------------------------------------------
+  perf:
+    name: "6 · rendimiento (benchmark, memoria, profiling)"
+    needs: sec-deps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # hace falta la rama base para medir la linea base
+      - uses: ./.github/actions/preparar
+      - name: Linea base (misma maquina, mismos benchmarks)
+        env:
+          # PR: la rama destino. Push a main: el commit anterior al push.
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "::warning::Sin linea base valida ($BASE): el benchmark se mide sin comparar."
+          elif ! make bench-baseline BASE_REF="$BASE"; then
+            rm -rf .benchmarks
+            echo "::warning::No se pudo medir la linea base en $BASE: el benchmark se mide sin comparar."
+          fi
+      - run: make bench
+      - run: make memory
+      - run: make profile
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-perf
+          path: |
+            reports/
+            .benchmarks/
+
+  # --- etapa 7: resultado final -------------------------------------------------
+  resultado:
+    name: "7 · resultado"
+    if: always()
+    needs: [entorno, lint, types, complexity, sec-code, secrets, test, sec-deps, perf]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tabla aprobado / rechazado
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          needs = json.loads(os.environ["NEEDS"])
+          icono = {"success": "✅ aprobado", "failure": "❌ rechazado",
+                   "cancelled": "⏹️ cancelado", "skipped": "⏭️ no corrio"}
+          filas = [f"| `{job}` | {icono.get(d['result'], d['result'])} |" for job, d in needs.items()]
+          ok = all(d["result"] == "success" for d in needs.values())
+          resumen = "\n".join([
+              f"## Resultado del pipeline: {'APROBADO ✅' if ok else 'RECHAZADO ❌'}", "",
+              "| Control | Resultado |", "|---|---|", *filas, "",
+              "Reportes de cada control: seccion **Artifacts** de esta corrida.",
+              "Para reproducir un fallo en local: `make <control>` (ver docs/mantenimiento.md).",
+          ])
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(resumen + "\n")
+          print(resumen)
+          raise SystemExit(0 if ok else 1)
+          PY
