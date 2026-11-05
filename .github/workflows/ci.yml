@@ -9,7 +9,7 @@
 #   2. entorno       Python + dependencias fijadas con hashes (.github/actions/preparar)
 #   3. estatica      lint, types, complexity, sec-code, secrets      (en paralelo)
 #   4. pruebas       pytest + cobertura, en 3.12 y 3.14
-#   5. dependencias  pip-audit                                      (docs: paso 8)
+#   5. deps + docs   pip-audit | mkdocs --strict, markdownlint, lychee (en paralelo)
 #   6. rendimiento   benchmark vs main, memoria, profiling
 #   7. resultado     tabla aprobado / rechazado + reportes como artefactos
 
@@ -206,10 +206,39 @@ jobs:
           name: reportes-sec-deps
           path: reports/
 
+  docs:
+    name: "5 · documentacion (mkdocs, markdownlint, lychee)"
+    needs: test
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
+    env:
+      LYCHEE_VERSION: "0.24.2"
+      LYCHEE_SHA256: 1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+      - name: Instalar lychee (version fija, checksum verificado)
+        run: |
+          f=lychee-x86_64-unknown-linux-gnu.tar.gz
+          curl -sSfL -o "$f" "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/$f"
+          echo "${LYCHEE_SHA256}  $f" | sha256sum -c -
+          tar -xzf "$f" && sudo mv lychee /usr/local/bin/
+      - run: make docs
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # lychee: evita el rate limit de github.com
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-docs
+          path: |
+            reports/
+            site/
+
   # --- etapa 6: rendimiento y memoria ------------------------------------------
   perf:
     name: "6 · rendimiento (benchmark, memoria, profiling)"
-    needs: sec-deps
+    needs: [sec-deps, docs]
     runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -243,7 +272,7 @@ jobs:
   resultado:
     name: "7 · resultado"
     if: always()
-    needs: [entorno, lint, types, complexity, sec-code, secrets, test, sec-deps, perf]
+    needs: [entorno, lint, types, complexity, sec-code, secrets, test, sec-deps, docs, perf]
     runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     steps:
       - name: Tabla aprobado / rechazado

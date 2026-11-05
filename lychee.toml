@@ -1,0 +1,14 @@
+# Lychee: validez de enlaces de la documentacion (make docs).
+# Los enlaces internos rotos siempre bloquean. Los externos se reintentan;
+# 429 (rate limit) se acepta para no fallar por limites de terceros.
+max_retries = 3
+retry_wait_time = 2
+timeout = 20
+accept = ["200..=299", "429"]
+exclude = [
+  "^https?://localhost",
+  "^https?://127\\.0\\.0\\.1",
+  "^https://github\\.com/JuaniBattiston/pef/edit/",
+  # El propio sitio: se publica DESPUES de integrar en main; validarlo en un PR es circular.
+  "^https://juanibattiston\\.github\\.io/pef",
+]

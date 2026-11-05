@@ -180,8 +180,8 @@ uvx --python 3.12 --from scalene==1.5.51 scalene --cli --cpu --profile-all \
 py-spy record -o flame.svg -- python -m src.cli lote --modo secuencial
 snakeviz results/profile_baseline.prof                        # visor de cProfile
 python3 -m bench.apm_pyroscope                                # APM, ver http://localhost:4040
-ruff check . && ruff format --check .                         # PEP 8
-sphinx-build -b html docs docs/_build/html                    # documentación
+make ci                                                       # todos los controles del CI (parte 3)
+mkdocs serve                                                  # documentación (parte 3)
 ```
 
 Todos los resultados de la parte 2 están en `resultados-parte-2/`.
