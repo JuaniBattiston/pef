@@ -6,7 +6,7 @@ import time
 from collections.abc import Callable
 
 
-def timed_ms[T](fn: Callable[[], T]) -> tuple[T, float]:
+def timed_ms[T](fn: Callable[[], T]) -> tuple[T, int]:  # DEMO: devuelve float
     """Ejecuta `fn()` y devuelve (resultado, milisegundos transcurridos)."""
     t0 = time.perf_counter()
     out = fn()
