@@ -49,7 +49,7 @@ Además corren dos workflows independientes: **CodeQL** (push, PR y semanal) y l
 | Complejidad | complejidad ciclomática | Radon, Xenon | `make complexity` | `radon_cc.txt`, `radon_mi.txt` | una función o módulo peor que rango C (CC > 20) o promedio peor que A |
 | Tipado | tipos y contratos | mypy | `make types` | `mypy.txt` | cualquier error; toda función de `src/` debe estar anotada |
 | Vulnerabilidades (código) | patrones inseguros | Bandit, CodeQL | `make sec-code` | `bandit.sarif`, `bandit.txt` | severidad alta con confianza media o alta |
-| Secretos | credenciales en el historial | gitleaks | `make secrets` | `gitleaks.sarif` | cualquier hallazgo |
+| Secretos | credenciales en todo el historial del commit que se integra | gitleaks | `make secrets` | `gitleaks.sarif` | cualquier hallazgo |
 | Dependencias | vulnerabilidades conocidas, versiones reproducibles | pip-audit, Dependabot | `make sec-deps` | `pip-audit.md`, `pip-audit.json` | cualquier vulnerabilidad no exceptuada |
 | Documentación | el sitio se construye, estilo, enlaces válidos | MkDocs, markdownlint-cli2, Lychee | `make docs` | `site/`, `lychee.md` | advertencia de MkDocs, error de estilo o enlace roto |
 | Benchmark | tiempo de operaciones representativas | pytest-benchmark | `make bench-baseline` + `make bench` | `bench.json` | mediana > +25 % contra la base |
