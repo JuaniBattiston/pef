@@ -1,5 +1,8 @@
 # Plan — Tercer Parcial: documentación externa + CI
 
+> **Estado (2026-11-05):** pasos 1-6 hechos (repo, locks, mypy, Makefile,
+> rendimiento, workflow). Faltan 7 (branch protection), 8 (MkDocs) y 9 (evidencia).
+
 > Criterio rector (igual que en la parte 2): **simple y reproducible**.
 > Cada control es **un comando** que corre igual en la máquina local y en el CI.
 > El CI no tiene lógica propia: llama a `make <control>`. Si pasa local, pasa en CI.
@@ -41,16 +44,16 @@
 |---|---|---|---|---|
 | Pruebas | pytest | `make test` | consola + `reports/junit.xml` | ≥ 1 test falla |
 | Cobertura | pytest-cov | (dentro de `make test`) | `coverage.xml` + HTML | `--cov-fail-under=90` en `src/` |
-| Análisis estático | Ruff (+ Pylint informativo) | `make lint` | consola + `reports/ruff.sarif` | cualquier error de ruff o `ruff format --check` falla; Pylint `--fail-under=9` |
+| Análisis estático | Ruff + Pylint | `make lint` | consola + `reports/ruff.sarif`, `pylint.txt` | cualquier error de ruff o `ruff format --check` falla; Pylint `--fail-under=9.5` (hoy 9,71) |
 | Complejidad | Radon (reporte) + Xenon (gate) | `make complexity` | `reports/radon_cc.txt`, `radon_mi.txt` | función > C (CC > 20) o promedio del módulo > A → rechaza. Advertencia en C (11-20) |
 | Tipado | mypy | `make types` | consola + `reports/mypy.txt` | cualquier error en `src/` (`--disallow-untyped-defs`) |
 | Seguridad del código | Bandit + CodeQL | `make sec-code` | `reports/bandit.sarif` + `.txt`; CodeQL en pestaña Security | Bandit: severidad **High** (confianza ≥ Medium) bloquea; Medium/Low se reportan |
 | Secretos | Gitleaks | `make secrets` | `reports/gitleaks.sarif` | cualquier hallazgo bloquea (excepciones en `.gitleaks.toml`) |
-| Dependencias | pip-audit + Dependabot | `make sec-deps` | `reports/pip-audit.json` + `.md` | vulnerabilidad con fix disponible o CVSS ≥ 7 bloquea; excepciones con `--ignore-vuln` documentadas |
+| Dependencias | pip-audit + Dependabot | `make sec-deps` | `reports/pip-audit.json` + `.md` | cualquier vulnerabilidad conocida bloquea (pip-audit no filtra por CVSS); excepciones solo con `--ignore-vuln` en `PIP_AUDIT_IGNORE`, documentadas |
 | Documentación | MkDocs `--strict` + markdownlint-cli2 + Lychee | `make docs` | `site/` como artefacto | build falla, warning de mkdocs o enlace roto |
 | Benchmark | pytest-benchmark | `make bench` | `reports/bench.json` + tabla comparativa | mediana > **+25 %** contra `main` medido en el **mismo runner** |
 | Profiling CPU | pyinstrument (+ cProfile) | `make profile` | `reports/profile.html` + top-20 | **informativo** (no bloquea): se publica para revisar el cuello de botella |
-| Memoria | tracemalloc (script propio) | `make memory` | `reports/memory.json` | pico > límite de `bench/memory_limits.json` (pico medido × 1,3) |
+| Memoria | tracemalloc (`bench/check_memory.py`) | `make memory` | `reports/memory.json` | pico > límite de `bench/memory_limits.json` (pico medido × 1,3) |
 
 ### Por qué estos umbrales
 - **Cobertura 90 %**: hoy estamos en 98 %; 90 da margen sin permitir que se caiga.
@@ -99,7 +102,7 @@ Workflows aparte:
 | Fuente | Bloquea | Revisión antes de integrar | Solo se reporta |
 |---|---|---|---|
 | Bandit | High | Medium | Low |
-| pip-audit | CVSS ≥ 7 o con fix disponible | resto | — |
+| pip-audit | toda vulnerabilidad conocida (salvo excepción documentada) | — | — |
 | CodeQL | error | warning | note |
 | Gitleaks | todo | — | — |
 

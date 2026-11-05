@@ -18,7 +18,7 @@ permissions:
 jobs:
   analizar:
     name: "CodeQL (${{ matrix.language }})"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     permissions:
       contents: read
       security-events: write

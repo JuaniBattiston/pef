@@ -38,7 +38,7 @@ jobs:
   # --- etapa 2 -----------------------------------------------------------------
   entorno:
     name: "2 · entorno reproducible"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -56,7 +56,7 @@ jobs:
   lint:
     name: "3 · lint (ruff, pylint)"
     needs: entorno
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     permissions:
       contents: read
       security-events: write
@@ -80,7 +80,7 @@ jobs:
   types:
     name: "3 · tipado (mypy)"
     needs: entorno
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -96,7 +96,7 @@ jobs:
   complexity:
     name: "3 · complejidad (radon, xenon)"
     needs: entorno
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -112,7 +112,7 @@ jobs:
   sec-code:
     name: "3 · seguridad del codigo (bandit)"
     needs: entorno
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     permissions:
       contents: read
       security-events: write
@@ -136,7 +136,7 @@ jobs:
   secrets:
     name: "3 · secretos (gitleaks)"
     needs: entorno
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     permissions:
       contents: read
       security-events: write
@@ -170,7 +170,7 @@ jobs:
   test:
     name: "4 · pruebas y cobertura (py${{ matrix.python }})"
     needs: [lint, types, complexity, sec-code, secrets]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     strategy:
       fail-fast: false
       matrix:
@@ -193,7 +193,7 @@ jobs:
   sec-deps:
     name: "5 · dependencias (pip-audit)"
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -210,7 +210,7 @@ jobs:
   perf:
     name: "6 · rendimiento (benchmark, memoria, profiling)"
     needs: sec-deps
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -244,7 +244,7 @@ jobs:
     name: "7 · resultado"
     if: always()
     needs: [entorno, lint, types, complexity, sec-code, secrets, test, sec-deps, perf]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fijo: ubuntu-latest cambia de version sin aviso
     steps:
       - name: Tabla aprobado / rechazado
         env:
