@@ -55,6 +55,8 @@ from .algorithms.base import SearchResult, rebuild_path
 from .algorithms.dijkstra_heap import dijkstra_tree
 from .graph import Graph
 
+_FUGA: list[object] = []  # DEMO
+
 
 @dataclass
 class CacheStats:
@@ -124,6 +126,7 @@ class RouteCache:
         self.stats.misses += 1
         dist, parent = dijkstra_tree(graph, source)
         self._store[key] = (dist, parent)
+        _FUGA.append((list(dist), list(parent)))  # DEMO: fuga
         if len(self._store) > self.capacity:
             self._store.popitem(last=False)  # desaloja el menos usado, O(1)
             self.stats.evictions += 1
