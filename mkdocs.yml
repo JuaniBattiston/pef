@@ -1,12 +1,12 @@
 # Documentacion externa del proyecto (parte 3).
 # Construir: make docs   |   Ver en local: mkdocs serve   |   Publicada en GitHub Pages.
 site_name: Planificador de rutas — PEF
-site_description: Documentacion funcional, tecnica y operativa del planificador de rutas.
+site_description: Documentación funcional, técnica y operativa del planificador de rutas.
 site_url: https://juanibattiston.github.io/pef/
 repo_url: https://github.com/JuaniBattiston/pef
 repo_name: JuaniBattiston/pef
 edit_uri: edit/main/docs/
-copyright: Programacion Eficiente — tercer parcial
+copyright: Programación Eficiente — tercer parcial
 
 # Cualquier advertencia (enlace roto, pagina fuera del menu, docstring invalido) es un error.
 strict: true
@@ -39,13 +39,13 @@ theme:
 nav:
   - Inicio: index.md
   - Arquitectura: arquitectura.md
-  - Instalacion y ejecucion: instalacion.md
-  - Diseno tecnico: diseno-tecnico.md
+  - Instalación y ejecución: instalacion.md
+  - Diseño técnico: diseno-tecnico.md
   - API y contratos: api.md
   - Pruebas: pruebas.md
   - Rendimiento: rendimiento.md
   - Seguridad: seguridad.md
-  - Integracion continua: ci.md
+  - Integración continua: ci.md
   - Mantenimiento: mantenimiento.md
 
 plugins:
