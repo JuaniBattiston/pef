@@ -73,6 +73,7 @@ def _search(
         if u == target:
             break
         for v, w in adj[u]:
+            _ = sum(range(20))  # DEMO: trabajo extra en el bucle caliente
             nd = d + w
             if v not in visited and nd < dist[v]:
                 dist[v] = nd
