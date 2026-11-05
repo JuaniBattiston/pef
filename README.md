@@ -30,7 +30,7 @@ python3 -m src.cli simular  --family grid --size 4000
 python3 -m src.cli lote --family grid --size 16000 --n 200 --modo procesos
 ```
 
-El núcleo (`src/`) no tiene dependencias: sólo la biblioteca estándar (Python 3.11+).
+El núcleo (`src/`) no tiene dependencias: sólo la biblioteca estándar (Python 3.12+).
 El visualizador usa FastAPI: `pip install -r requirements.txt`.
 
 ## 3. Estructura

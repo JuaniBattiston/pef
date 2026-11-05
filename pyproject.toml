@@ -2,7 +2,7 @@
 name = "pef-rutas"
 version = "2.0.0"
 description = "Planificador inteligente de rutas - Programacion Eficiente"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
