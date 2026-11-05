@@ -1,0 +1,22 @@
+{
+  "grafo_grid": {
+    "medido_mib": 7.36,
+    "limite_mib": 9.57
+  },
+  "dijkstra_heap": {
+    "medido_mib": 0.89,
+    "limite_mib": 1.16
+  },
+  "cache_32": {
+    "medido_mib": 12.72,
+    "limite_mib": 16.54
+  },
+  "archivo_lotes": {
+    "medido_mib": 2.69,
+    "limite_mib": 3.5
+  },
+  "archivo_ingenuo": {
+    "medido_mib": 13.49,
+    "limite_mib": 17.54
+  }
+}

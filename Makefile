@@ -33,8 +33,21 @@ BANDIT_SEV     := high   # severidad minima que bloquea
 BANDIT_CONF    := medium # confianza minima que bloquea
 # Vulnerabilidades aceptadas explicitamente (ver docs/seguridad.md). Ej: --ignore-vuln GHSA-xxxx
 PIP_AUDIT_IGNORE :=
+# Benchmark: % de empeoramiento de la MEDIANA contra la linea base que rechaza.
+BENCH_REGRESION := 25
+# Rama/commit contra el que se compara el benchmark (el CI pasa origin/main).
+BASE_REF ?= main
 
-.PHONY: help setup lock ci lint types complexity test sec-code secrets sec-deps clean
+# --- rendimiento ---------------------------------------------------------------
+PY_ABS := $(if $(findstring /,$(PY)),$(abspath $(PY)),$(PY))
+BENCH_OPTS := bench/test_benchmarks.py -p no:cacheprovider --benchmark-only \
+  --benchmark-disable-gc --benchmark-min-rounds=10 --benchmark-sort=name \
+  --benchmark-columns=min,median,iqr,rounds --benchmark-storage="file://$(CURDIR)/.benchmarks"
+# Carga que se perfila: un lote de consultas sobre una grilla de 16.000 nodos.
+PROFILE_ARGS := -m src.cli lote --family grid --size 16000 --n 100 --modo secuencial
+
+.PHONY: help setup lock ci lint types complexity test sec-code secrets sec-deps \
+  bench bench-baseline memory profile clean
 
 help: ## Lista los targets disponibles
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -100,10 +113,39 @@ sec-deps: | $(REPORTS) ## pip-audit sobre las dependencias fijadas
 	$(PY) -m pip_audit -r requirements-dev.txt --require-hashes --disable-pip $(PIP_AUDIT_IGNORE) \
 	  -f markdown --desc | tee $(REPORTS)/pip-audit.md
 
+# --- etapa 6: rendimiento y memoria -------------------------------------------
+
+bench-baseline: ## Mide la linea base en BASE_REF (default main) con los benchmarks actuales
+	@rm -rf .benchmarks; tmp=$$(mktemp -d); \
+	git worktree add -q --detach "$$tmp" $(BASE_REF); \
+	cp bench/test_benchmarks.py "$$tmp/bench/"; \
+	echo "==> linea base: $(BASE_REF) ($$(git rev-parse --short $(BASE_REF)))"; \
+	(cd "$$tmp" && "$(PY_ABS)" -m pytest $(BENCH_OPTS) --benchmark-save=base) && st=0 || st=$$?; \
+	git worktree remove --force "$$tmp"; exit $$st
+
+bench: | $(REPORTS) ## pytest-benchmark; falla si la mediana empeora > BENCH_REGRESION % vs la base
+	@cmp=""; \
+	if ls .benchmarks/*/*_base.json >/dev/null 2>&1; then \
+	  cmp="--benchmark-compare --benchmark-compare-fail=median:$(BENCH_REGRESION)%"; \
+	else echo "==> sin linea base (make bench-baseline): se mide sin comparar"; fi; \
+	$(PY) -m pytest $(BENCH_OPTS) --benchmark-json=$(REPORTS)/bench.json $$cmp
+
+memory: | $(REPORTS) ## Pico de memoria (tracemalloc) contra bench/memory_limits.json
+	$(PY) -m bench.check_memory
+
+profile: | $(REPORTS) ## Perfil de CPU (pyinstrument + cProfile). Informativo, no bloquea
+	$(PY) -m pyinstrument -r session -o $(REPORTS)/profile.pyisession $(PROFILE_ARGS)
+	$(PY) -m pyinstrument --load $(REPORTS)/profile.pyisession -r html -o $(REPORTS)/profile.html
+	$(PY) -m pyinstrument --load $(REPORTS)/profile.pyisession -r text -o $(REPORTS)/profile.txt
+	$(PY) -m cProfile -o $(REPORTS)/profile.prof $(PROFILE_ARGS) > /dev/null
+	$(PY) -c "import pstats; pstats.Stats('$(REPORTS)/profile.prof').sort_stats('tottime').print_stats(20)" \
+	  > $(REPORTS)/profile_top20.txt
+	@grep -A12 "ncalls" $(REPORTS)/profile_top20.txt
+
 # --- todo junto ----------------------------------------------------------------
 
-ci: lint types complexity sec-code secrets test sec-deps ## Todos los controles, en orden
+ci: lint types complexity sec-code secrets test sec-deps bench memory profile ## Todos los controles, en orden
 	@echo; echo "==> make ci: todos los controles aprobados"
 
 clean: ## Borra reportes y caches
-	rm -rf $(REPORTS) .coverage .mypy_cache .ruff_cache .pytest_cache .benchmarks site
+	rm -rf $(REPORTS) .benchmarks .coverage .mypy_cache .ruff_cache .pytest_cache .benchmarks site
