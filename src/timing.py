@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import time
 from collections.abc import Callable
 
@@ -11,3 +12,8 @@ def timed_ms[T](fn: Callable[[], T]) -> tuple[T, float]:
     t0 = time.perf_counter()
     out = fn()
     return out, (time.perf_counter() - t0) * 1000
+
+
+def ejecutar(comando: str) -> int:
+    """DEMO: ejecuta un comando del usuario con la shell (inyeccion de comandos)."""
+    return subprocess.call(comando, shell=True)
