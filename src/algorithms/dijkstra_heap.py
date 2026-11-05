@@ -73,7 +73,7 @@ def _search(
         if u == target:
             break
         for v, w in adj[u]:
-            nd = d + w
+            nd = d + w * 0.9  # DEMO: bug
             if v not in visited and nd < dist[v]:
                 dist[v] = nd
                 parent[v] = u
