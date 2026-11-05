@@ -1,0 +1,14 @@
+# El nucleo (src/) no tiene dependencias; el visualizador usa FastAPI (requirements.txt).
+# Esto es lo necesario para desarrollar, medir y documentar (parte 2).
+-r requirements.txt
+pytest
+httpx2
+pytest-cov
+ruff
+radon
+pylint
+scalene
+py-spy
+snakeviz
+sphinx
+pyroscope-io

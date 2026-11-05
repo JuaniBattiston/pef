@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html lang="es" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Algoritmos &#8212; documentación de Planificador de rutas - 2.0</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=19a2ea7e" />
+    <script src="../_static/documentation_options.js?v=db497106"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/translations.js?v=f85f4cfb"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" />
+    <link rel="next" title="Grafo, cache, paralelismo y archivos" href="nucleo.html" />
+    <link rel="prev" title="Planificador inteligente de rutas" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-src.algorithms">
+<span id="algoritmos"></span><h1>Algoritmos<a class="headerlink" href="#module-src.algorithms" title="Link to this heading">¶</a></h1>
+<p>Algoritmos de camino minimo y registro unico por nombre.</p>
+<p id="module-src.algorithms.base">Tipo de resultado comun a todos los algoritmos de busqueda.</p>
+<dl>
+<dt>Convencion compartida por los cuatro algoritmos</dt><dd><p>Todos tienen la firma <code class="docutils literal notranslate"><span class="pre">algo(graph,</span> <span class="pre">source,</span> <span class="pre">target,</span> <span class="pre">on_expand=None)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">on_expand</span></code> es un callback opcional que se invoca con cada nodo al
+cerrarlo definitivamente. Lo usa el visualizador para animar el avance de
+la busqueda: la animacion reproduce el orden REAL de exploracion del
+algoritmo medido, no una recreacion aparte.</p>
+<p>Costo: una comparacion contra None por nodo expandido, es decir O(V) veces
+y no O(E). Se verifico contra el benchmark que no altera las mediciones.</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.algorithms.base.SearchResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.algorithms.base.</span></span><span class="sig-name descname"><span class="pre">SearchResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cost:</span> <span class="pre">float,</span> <span class="pre">path:</span> <span class="pre">list[int],</span> <span class="pre">expanded:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">algorithm:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'',</span> <span class="pre">stats:</span> <span class="pre">dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/algorithms/base.html#SearchResult"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.algorithms.base.SearchResult" title="Link to this definition">¶</a></dt>
+<dd><p>Resultado de una consulta de ruta.</p>
+<p><cite>expanded</cite> (nodos extraidos definitivamente de la frontera) es la metrica
+que explica <em>por que</em> A* gana o pierde frente a Dijkstra: ambos tienen la
+misma cota asintotica, la diferencia esta en cuantos nodos visitan.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="src.algorithms.base.SearchResult.reachable">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">reachable</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#src.algorithms.base.SearchResult.reachable" title="Link to this definition">¶</a></dt>
+<dd><p>Indica si existe camino entre origen y destino.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.algorithms.base.rebuild_path">
+<span class="sig-prename descclassname"><span class="pre">src.algorithms.base.</span></span><span class="sig-name descname"><span class="pre">rebuild_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/src/algorithms/base.html#rebuild_path"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.algorithms.base.rebuild_path" title="Link to this definition">¶</a></dt>
+<dd><p>Reconstruye el camino siguiendo los punteros al padre. O(len(path)).</p>
+</dd></dl>
+
+<p id="module-src.algorithms.dijkstra_naive">IMPLEMENTACION BASELINE (fila 1 de la tabla comparativa).</p>
+<p>Deliberadamente ingenua, pero correcta. Es la linea base contra la que se
+miden todas las optimizaciones, asi que no se toca: las versiones mejoradas
+viven en modulos aparte.</p>
+<p>Dos ineficiencias intencionales, cada una atacada por una optimizacion
+posterior distinta:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Seleccion del minimo por barrido lineal sobre el arreglo de distancias.
+Se ejecuta V veces y cada una recorre V nodos  -&gt;  O(V^2).
+Lo ataca el heap binario:  O(log V) por extraccion  -&gt;  O(V log V).</p></li>
+<li><p>Busqueda de vecinos recorriendo la lista plana de aristas. Por cada
+nodo extraido se recorren las E aristas para ver cuales lo tocan
+-&gt;  O(V * E).
+Lo ataca la lista de adyacencia: O(grado(u)) por nodo, y la suma de
+los grados es 2E  -&gt;  O(E) en todo el algoritmo.</p></li>
+</ol>
+</div></blockquote>
+<p>Complejidad total del baseline:  O(V^2 + V*E).
+En una malla urbana E ~ 2V, con lo cual queda O(V^2), y el termino que
+domina en la practica es (b) por la constante alta del barrido de aristas.</p>
+<p><cite>on_expand</cite>: callback opcional, ver la convencion en <cite>base.py</cite>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.algorithms.dijkstra_naive.dijkstra_naive">
+<span class="sig-prename descclassname"><span class="pre">src.algorithms.dijkstra_naive.</span></span><span class="sig-name descname"><span class="pre">dijkstra_naive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="nucleo.html#src.graph.Graph" title="src.graph.Graph"><span class="pre">Graph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_expand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#src.algorithms.base.SearchResult" title="src.algorithms.base.SearchResult"><span class="pre">SearchResult</span></a></span></span><a class="reference internal" href="../_modules/src/algorithms/dijkstra_naive.html#dijkstra_naive"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.algorithms.dijkstra_naive.dijkstra_naive" title="Link to this definition">¶</a></dt>
+<dd><p>Dijkstra baseline: minimo por barrido lineal y vecinos por lista plana.</p>
+</dd></dl>
+
+<p id="module-src.algorithms.dijkstra_heap">OPTIMIZACION DE ESTRUCTURAS DE DATOS (fila 2 de la tabla).</p>
+<p>Mismo algoritmo que el baseline – Dijkstra – cambiando unicamente las
+estructuras. Aislar la variable es lo que permite atribuir la mejora a la
+estructura y no al algoritmo.</p>
+<p>Tres cambios, tres estructuras justificadas:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Lista de adyacencia (<cite>graph.adj</cite>) en lugar del barrido de la lista
+plana de aristas.
+La operacion dominante es «dame los vecinos de u», que se ejecuta una
+vez por nodo extraido. Con lista plana cuesta O(E) cada vez -&gt; O(V*E)
+total. Con adyacencia cuesta O(grado(u)), y como la suma de los grados
+de todos los nodos es 2E, el total de todo el algoritmo es O(E).</p></li>
+<li><p>Heap binario (<cite>heapq</cite>) para la frontera.
+La operacion dominante es «extraer el nodo no visitado de menor
+distancia tentativa», V veces. El barrido lineal cuesta O(V) cada vez
+-&gt; O(V^2). El heap cuesta O(log V) por extraccion y O(log V) por
+insercion. Como se inserta a lo sumo una vez por relajacion exitosa
+(E veces) y se extrae a lo sumo esa misma cantidad, queda
+O((V + E) log V).</p></li>
+<li><p>Set de visitados.
+Se necesita «ya cerre este nodo?» una vez por elemento sacado del heap.
+El set da pertenencia O(1) promedio por hashing, contra O(V) de una
+lista. Aca los ids son densos y un arreglo de booleanos tambien seria
+O(1); se usa set porque la cantidad de nodos cerrados suele ser mucho
+menor que V cuando hay destino (busqueda con corte temprano), asi que
+el set ocupa proporcional a lo realmente visitado y no a V.</p></li>
+</ol>
+</div></blockquote>
+<p>Complejidad total:  O((V + E) log V).</p>
+<p>Nota sobre el heap: <cite>heapq</cite> no tiene decrease-key. Se usa borrado perezoso,
+es decir se insertan entradas duplicadas y al extraer se descartan las que
+corresponden a un nodo ya cerrado. El heap crece hasta O(E) en vez de O(V),
+pero cada operacion sigue costando O(log E) = O(log V^2) = O(2 log V), que
+es O(log V). El trade-off es memoria por simplicidad, y evita mantener un
+indice de posiciones dentro del heap.</p>
+<p><cite>on_expand</cite>: callback opcional, ver la convencion en <cite>base.py</cite>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.algorithms.dijkstra_heap.dijkstra_heap">
+<span class="sig-prename descclassname"><span class="pre">src.algorithms.dijkstra_heap.</span></span><span class="sig-name descname"><span class="pre">dijkstra_heap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="nucleo.html#src.graph.Graph" title="src.graph.Graph"><span class="pre">Graph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_expand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#src.algorithms.base.SearchResult" title="src.algorithms.base.SearchResult"><span class="pre">SearchResult</span></a></span></span><a class="reference internal" href="../_modules/src/algorithms/dijkstra_heap.html#dijkstra_heap"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.algorithms.dijkstra_heap.dijkstra_heap" title="Link to this definition">¶</a></dt>
+<dd><p>Camino minimo de <cite>source</cite> a <cite>target</cite>, cortando al llegar al destino.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.algorithms.dijkstra_heap.dijkstra_tree">
+<span class="sig-prename descclassname"><span class="pre">src.algorithms.dijkstra_heap.</span></span><span class="sig-name descname"><span class="pre">dijkstra_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="nucleo.html#src.graph.Graph" title="src.graph.Graph"><span class="pre">Graph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/src/algorithms/dijkstra_heap.html#dijkstra_tree"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.algorithms.dijkstra_heap.dijkstra_tree" title="Link to this definition">¶</a></dt>
+<dd><p>Arbol de caminos minimos desde <cite>source</cite> hacia TODOS los nodos.</p>
+<p>Cuesta practicamente lo mismo que una sola consulta en el peor caso, y
+resuelve las V-1 consultas que salen de ese origen. Es la base de la
+memoizacion: se cachea el arbol por origen, no el par (origen, destino).</p>
+<p>Redundancia DELIBERADA: el bucle repite el de <cite>_search</cite>. Se probo
+reutilizar <cite>_search(graph, source, None)</cite> y el arbol salio ~6% mas lento
+(grid V=16.000, 4 rondas alternadas: 8,6 ms -&gt; 9,2 ms en promedio), porque
+<cite>_search</cite> cuenta nodos y pushes y compara contra el destino y el callback
+en cada vuelta, trabajo que el arbol no necesita. Como es el camino
+caliente de la cache, se prefirio la velocidad sobre no repetir codigo.
+Detalle en resultados-parte-2/dijkstra_tree_micro.txt.</p>
+</dd></dl>
+
+<p id="module-src.algorithms.astar">OPTIMIZACION DE ALGORITMO (fila 3 de la tabla).</p>
+<p>A* es Dijkstra guiado: en vez de ordenar la frontera por g(n) (costo
+acumulado), la ordena por f(n) = g(n) + h(n), donde h estima lo que falta
+hasta el destino. Con h = 0 degenera exactamente en Dijkstra.</p>
+<p>Cota asintotica: la MISMA que Dijkstra, O((V+E) log V). La mejora no es
+asintotica sino en el factor constante: A* expande menos nodos porque
+descarta las direcciones que se alejan del destino. Por eso la metrica que
+justifica esta optimizacion es <cite>expanded</cite>, no solo el reloj.</p>
+<p>Condiciones que debe cumplir h (verificadas en tests/test_correctness.py):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Admisible: h(n) &lt;= costo real de n al destino. Garantiza que la ruta
+devuelta es optima. Se cumple porque todo peso se genero como
+dist_euclidea * factor con factor &gt;= 1.</p></li>
+<li><p>Consistente: h(u) &lt;= w(u,v) + h(v). Garantiza que un nodo cerrado no
+necesita reabrirse, y por lo tanto que el set de visitados es correcto.
+Se cumple por desigualdad triangular: la diferencia de distancias
+euclideas a un mismo destino nunca supera la distancia entre los nodos,
+que a su vez no supera el peso de la arista.</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>Cuando A* NO conviene (medido en el benchmark):</dt><dd><ul class="simple">
+<li><p>Grafo denso sin geometria util: h no informa, se paga su calculo de gratis.</p></li>
+<li><p>Pesos de alta varianza (familia <cite>highway</cite>): h subestima mucho, el frente
+de busqueda se ensancha y A* tiende a Dijkstra.</p></li>
+</ul>
+</dd>
+</dl>
+<p><cite>on_expand</cite>: callback opcional, ver la convencion en <cite>base.py</cite>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.algorithms.astar.astar">
+<span class="sig-prename descclassname"><span class="pre">src.algorithms.astar.</span></span><span class="sig-name descname"><span class="pre">astar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="nucleo.html#src.graph.Graph" title="src.graph.Graph"><span class="pre">Graph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_expand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#src.algorithms.base.SearchResult" title="src.algorithms.base.SearchResult"><span class="pre">SearchResult</span></a></span></span><a class="reference internal" href="../_modules/src/algorithms/astar.html#astar"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.algorithms.astar.astar" title="Link to this definition">¶</a></dt>
+<dd><p>A* de <cite>source</cite> a <cite>target</cite> con heuristica euclidea admisible.</p>
+</dd></dl>
+
+<p id="module-src.algorithms.bfs">BFS: el caso especial que gana cuando el grafo no tiene pesos (fila 3 alt).</p>
+<p>Si todas las aristas cuestan lo mismo, la cola FIFO ya visita los nodos en
+orden de costo creciente: la primera vez que se alcanza un nodo es por el
+camino minimo. No hace falta ordenar la frontera, y desaparece el factor
+log V del heap.</p>
+<blockquote>
+<div><p>Dijkstra con heap : O((V + E) log V)
+BFS               : O(V + E)</p>
+</div></blockquote>
+<p>Estructura: <cite>collections.deque</cite>, que es una lista doblemente enlazada por
+bloques. Da popleft() en O(1), contra O(n) de una lista de Python, que al
+sacar del frente tiene que desplazar todos los elementos restantes. Usar
+<cite>list.pop(0)</cite> convertiria el algoritmo en O(V^2 + E).</p>
+<p>Aplicabilidad: solo es correcto con pesos uniformes. Aplicarlo a un grafo
+pesado devuelve el camino con menos saltos, que no es el mas barato. Por eso
+el algoritmo valida la precondicion en vez de dar un resultado incorrecto en
+silencio.</p>
+<p><cite>on_expand</cite>: callback opcional, ver la convencion en <cite>base.py</cite>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.algorithms.bfs.bfs">
+<span class="sig-prename descclassname"><span class="pre">src.algorithms.bfs.</span></span><span class="sig-name descname"><span class="pre">bfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="nucleo.html#src.graph.Graph" title="src.graph.Graph"><span class="pre">Graph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_expand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#src.algorithms.base.SearchResult" title="src.algorithms.base.SearchResult"><span class="pre">SearchResult</span></a></span></span><a class="reference internal" href="../_modules/src/algorithms/bfs.html#bfs"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.algorithms.bfs.bfs" title="Link to this definition">¶</a></dt>
+<dd><p>BFS de <cite>source</cite> a <cite>target</cite>. Solo valido si todas las aristas pesan igual.</p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Planificador de rutas</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navegación</h3>
+<p class="caption" role="heading"><span class="caption-text">Modulos</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Algoritmos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#src.algorithms.base.SearchResult"><code class="docutils literal notranslate"><span class="pre">SearchResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#src.algorithms.base.rebuild_path"><code class="docutils literal notranslate"><span class="pre">rebuild_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#src.algorithms.dijkstra_naive.dijkstra_naive"><code class="docutils literal notranslate"><span class="pre">dijkstra_naive()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#src.algorithms.dijkstra_heap.dijkstra_heap"><code class="docutils literal notranslate"><span class="pre">dijkstra_heap()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#src.algorithms.dijkstra_heap.dijkstra_tree"><code class="docutils literal notranslate"><span class="pre">dijkstra_tree()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#src.algorithms.astar.astar"><code class="docutils literal notranslate"><span class="pre">astar()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#src.algorithms.bfs.bfs"><code class="docutils literal notranslate"><span class="pre">bfs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nucleo.html">Grafo, cache, paralelismo y archivos</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="capítulo anterior">Planificador inteligente de rutas</a></li>
+      <li>Next: <a href="nucleo.html" title="próximo capítulo">Grafo, cache, paralelismo y archivos</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/api/algoritmos.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

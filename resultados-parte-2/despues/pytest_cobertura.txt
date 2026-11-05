@@ -1,0 +1,24 @@
+.................................................................        [100%]
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.7-final-0 ________________
+
+Name                               Stmts   Miss  Cover
+------------------------------------------------------
+src/__init__.py                        0      0   100%
+src/algorithms/__init__.py             5      0   100%
+src/algorithms/astar.py               32      0   100%
+src/algorithms/base.py                21      1    95%
+src/algorithms/bfs.py                 27      1    96%
+src/algorithms/dijkstra_heap.py       54      1    98%
+src/algorithms/dijkstra_naive.py      33      2    94%
+src/archivos.py                       49      0   100%
+src/cache.py                          52      2    96%
+src/cli.py                           126      5    96%
+src/graph.py                         119      0   100%
+src/osm.py                            35      1    97%
+src/parallel.py                       51      5    90%
+src/timing.py                          6      0   100%
+------------------------------------------------------
+TOTAL                                610     18    97%
+Coverage XML written to file coverage.xml
+65 passed in 0.69s

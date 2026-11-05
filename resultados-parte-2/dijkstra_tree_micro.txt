@@ -1,0 +1,12 @@
+antes 8.15
+unificado 8.53
+revertido 8.87
+antes 8.39
+unificado 9.01
+revertido 8.32
+antes 8.93
+unificado 9.29
+revertido 8.97
+antes 8.99
+unificado 9.85
+revertido 8.43

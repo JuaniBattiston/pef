@@ -1,0 +1,4 @@
+# El nucleo (src/) usa solo la biblioteca estandar.
+# Esto es lo que necesita el visualizador web (viz/server.py).
+fastapi
+uvicorn

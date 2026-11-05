@@ -1,0 +1,25 @@
+OPTIMIZADO  astar  (20 consultas, V=64000)
+==========================================
+
+         1314716 function calls in 0.192 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       20    0.095    0.005    0.188    0.009 /Users/franciscomunoz/Downloads/pef/src/algorithms/astar.py:48(astar)
+   225406    0.031    0.000    0.031    0.000 {built-in method _heapq.heappop}
+   232885    0.025    0.000    0.031    0.000 /Users/franciscomunoz/Downloads/pef/src/graph.py:100(euclid)
+   232885    0.019    0.000    0.050    0.000 /Users/franciscomunoz/Downloads/pef/src/graph.py:104(heuristic)
+   232865    0.008    0.000    0.008    0.000 {built-in method _heapq.heappush}
+   232885    0.005    0.000    0.005    0.000 {built-in method math.hypot}
+        1    0.004    0.004    0.192    0.192 /Users/franciscomunoz/Downloads/pef/bench/profile_run.py:85(<listcomp>)
+   154820    0.003    0.000    0.003    0.000 {method 'add' of 'set' objects}
+       20    0.000    0.000    0.000    0.000 /Users/franciscomunoz/Downloads/pef/src/algorithms/base.py:31(rebuild_path)
+     2867    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       20    0.000    0.000    0.000    0.000 <string>:2(__init__)
+       20    0.000    0.000    0.000    0.000 {method 'reverse' of 'list' objects}
+       20    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        1    0.000    0.000    0.192    0.192 /Users/franciscomunoz/Downloads/pef/bench/profile_run.py:85(<lambda>)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+

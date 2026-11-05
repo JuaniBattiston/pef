@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planificador de rutas — Parte 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f4f3ef; --surface:#fcfcfb; --surface-2:#efeee9; --line:#dedcd5;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#7c7a74;
+  --accent:#2a78d6; --accent-soft:#dbe8f9; --muted-bar:#b9b7b0;
+  --good:#0a7d3c; --good-soft:#dcf1e3; --bad:#c23a3a; --bad-soft:#f8e1e1;
+  --code-bg:#1d1d1b; --code-ink:#f1f0ea; --code-key:#86b6ef; --code-com:#9b9a92; --code-str:#9bd8b8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#121211; --surface:#1a1a19; --surface-2:#232321; --line:#34342f;
+    --ink:#ffffff; --ink-2:#c3c2b7; --ink-3:#8f8e86;
+    --accent:#3987e5; --accent-soft:#1c2c42; --muted-bar:#5a5953;
+    --good:#4cc57f; --good-soft:#163222; --bad:#e66767; --bad-soft:#3a1d1d;
+    --code-bg:#0c0c0b;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#121211; --surface:#1a1a19; --surface-2:#232321; --line:#34342f;
+  --ink:#ffffff; --ink-2:#c3c2b7; --ink-3:#8f8e86;
+  --accent:#3987e5; --accent-soft:#1c2c42; --muted-bar:#5a5953;
+  --good:#4cc57f; --good-soft:#163222; --bad:#e66767; --bad-soft:#3a1d1d;
+  --code-bg:#0c0c0b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+
+/* ---------- escenario 16:9 que escala ---------- */
+.deck{position:fixed;inset:0;display:grid;place-items:center}
+.slide{
+  position:absolute;width:1280px;height:720px;background:var(--surface);
+  border-radius:18px;padding:56px 72px 64px;display:none;flex-direction:column;
+  box-shadow:0 2px 30px rgb(0 0 0 / .08);transform-origin:center center;overflow:hidden
+}
+.slide.on{display:flex}
+.kicker{font:600 13px/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+h1{font-size:54px;line-height:1.08;letter-spacing:-.02em;font-weight:700}
+h2{font-size:38px;line-height:1.15;letter-spacing:-.015em;font-weight:700;margin-bottom:10px}
+h3{font-size:19px;font-weight:600;margin-bottom:8px}
+.lead{font-size:21px;line-height:1.5;color:var(--ink-2);max-width:980px}
+p,li{font-size:18px;line-height:1.55;color:var(--ink-2)}
+ul{padding-left:22px} li{margin:6px 0}
+b,strong{color:var(--ink);font-weight:600}
+code{font-family:"JetBrains Mono",monospace;font-size:.88em;background:var(--surface-2);padding:1px 6px;border-radius:5px;color:var(--ink)}
+.body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:22px;min-height:0}
+.row{display:grid;gap:22px;grid-template-columns:1fr 1fr}
+.row3{display:grid;gap:18px;grid-template-columns:repeat(3,1fr)}
+.row4{display:grid;gap:16px;grid-template-columns:repeat(4,1fr)}
+.card{background:var(--surface-2);border-radius:14px;padding:20px 22px}
+.card p{font-size:16px}
+.card .t{font-weight:600;color:var(--ink);font-size:17px;margin-bottom:6px}
+.tag{display:inline-block;font:600 12px/1 Inter;padding:6px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-bottom:10px}
+.num{font-size:44px;font-weight:700;letter-spacing:-.02em;color:var(--ink);line-height:1}
+.num small{font-size:18px;color:var(--ink-3);font-weight:500;margin-left:4px}
+.cap{font-size:14px;color:var(--ink-3);margin-top:6px}
+.foot{position:absolute;left:72px;right:72px;bottom:24px;display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3)}
+pre{font-family:"JetBrains Mono",monospace;font-size:14.5px;line-height:1.55;background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:16px 20px;overflow:hidden;white-space:pre}
+pre .k{color:var(--code-key)} pre .c{color:var(--code-com)} pre .s{color:var(--code-str)}
+.shot{border-radius:12px;border:1px solid var(--line);width:100%;height:100%;object-fit:cover;object-position:top left;background:var(--surface-2)}
+.shotbox{min-height:0;flex:1;display:flex}
+.good{color:var(--good)} .bad{color:var(--bad)}
+.pill-good{background:var(--good-soft);color:var(--good)} .pill-bad{background:var(--bad-soft);color:var(--bad)}
+
+/* ---------- graficos de barras ---------- */
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar-row{display:grid;grid-template-columns:190px 1fr 110px;align-items:center;gap:12px;font-size:15px}
+.bar-row .lab{color:var(--ink-2);text-align:right}
+.bar-row .val{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.track{height:26px;position:relative}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;background:var(--muted-bar);transition:filter .15s}
+.fill.hi{background:var(--accent)}
+.fill:hover{filter:brightness(1.12)}
+.chart-title{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:12px}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--ink-3);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--surface);font-size:13px;padding:6px 9px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:9}
+
+/* ---------- diagramas ---------- */
+.flow{display:flex;align-items:stretch;gap:10px}
+.flow .step{flex:1;background:var(--surface-2);border-radius:12px;padding:16px;text-align:center}
+.flow .step .t{font-weight:600;color:var(--ink);font-size:16px}
+.flow .step p{font-size:14px;margin-top:4px}
+.flow .arrow{align-self:center;color:var(--ink-3);font-size:22px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.vs .card h3 .tag{margin:0 8px 0 0;vertical-align:2px}
+
+/* ---------- controles ---------- */
+.nav{position:fixed;right:18px;bottom:14px;display:flex;gap:8px;z-index:5}
+.nav button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:6px 11px;font:500 13px Inter;cursor:pointer}
+.nav button:hover{color:var(--ink)}
+.progress{position:fixed;left:0;top:0;height:3px;background:var(--accent);transition:width .25s;z-index:5}
+@media print{
+  body{overflow:visible} .nav,.progress{display:none}
+  .deck{position:static;display:block} .slide{display:flex!important;position:relative;transform:none!important;page-break-after:always;margin:0 auto 20px;box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="tip" id="tip"></div>
+<main class="deck" id="deck">
+
+<!-- 1 · Portada -->
+<section class="slide">
+  <div class="body" style="justify-content:center">
+    <div class="kicker">Programación Eficiente · Segundo parcial</div>
+    <h1>Planificador de rutas<br>Parte 2: código que se puede mantener</h1>
+    <p class="lead" style="margin-top:18px">En la parte 1 lo hicimos <b>rápido</b>. En la parte 2 lo hicimos <b>limpio, probado, documentado y medido</b>, y lo usamos para procesar archivos de un millón de consultas sin que la memoria explote.</p>
+    <div class="row4" style="margin-top:26px">
+      <div class="card"><div class="num" data-k="tests_despues">76</div><div class="cap">tests automáticos <span data-k="tests_antes_txt">(antes 13)</span></div></div>
+      <div class="card"><div class="num"><span data-k="cov_despues">97</span><small>%</small></div><div class="cap">del código cubierto por tests (antes 65%)</div></div>
+      <div class="card"><div class="num">0</div><div class="cap">avisos de estilo PEP 8 (antes 172)</div></div>
+      <div class="card"><div class="num">25×<small>menos</small></div><div class="cap">memoria al procesar un archivo de 1M filas</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>Opción 1 · Python 3.14</span><span>← → para navegar</span></div>
+</section>
+
+<!-- 2 · Mapa de la consigna -->
+<section class="slide">
+  <div class="kicker">El encargo</div>
+  <h2>Diez temas, una herramienta simple para cada uno</h2>
+  <p class="lead">El criterio fue elegir lo más directo: si algo se resolvía con un comando en vez de con código nuevo, se usó el comando.</p>
+  <div class="body">
+    <div class="row3" style="grid-template-columns:repeat(5,1fr);gap:12px">
+      <div class="card"><div class="tag">Limpieza</div><div class="t">Código redundante</div><p>6 duplicaciones eliminadas</p></div>
+      <div class="card"><div class="tag">Limpieza</div><div class="t">Refactorización</div><p>siempre con tests en verde</p></div>
+      <div class="card"><div class="tag">Limpieza</div><div class="t">PEP 8</div><p>ruff + docstrings</p></div>
+      <div class="card"><div class="tag">Calidad</div><div class="t">Testing</div><p>de 13 a 76 tests</p></div>
+      <div class="card"><div class="tag">Calidad</div><div class="t">Framework</div><p>FastAPI · pytest</p></div>
+      <div class="card"><div class="tag">Calidad</div><div class="t">Análisis</div><p>SonarQube</p></div>
+      <div class="card"><div class="tag">Calidad</div><div class="t">Documentación</div><p>Sphinx</p></div>
+      <div class="card"><div class="tag">Medición</div><div class="t">Perfilador Python</div><p>Scalene · py-spy · SnakeViz</p></div>
+      <div class="card"><div class="tag">Medición</div><div class="t">APM general</div><p>Grafana Pyroscope</p></div>
+      <div class="card"><div class="tag">Rendimiento</div><div class="t">Archivos grandes</div><p>lotes · buffer · procesos</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · Orden de trabajo -->
+<section class="slide">
+  <div class="kicker">Método</div>
+  <h2>Primero la red de seguridad, después tocar el código</h2>
+  <p class="lead">Refactorizar sin tests es apostar. El orden fue pensado para que cada cambio se pueda verificar en el momento.</p>
+  <div class="body">
+    <div class="flow">
+      <div class="step"><div class="t">1 · Foto “antes”</div><p>Sonar, ruff, cobertura, benchmark de la parte 1</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="t">2 · Tests con pytest</div><p>la red de seguridad</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="t">3 · Refactor</div><p>sacar duplicados, ordenar</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="t">4 · PEP 8</div><p>formato automático y docstrings</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="t">5 · Archivos grandes</div><p>funcionalidad nueva</p></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="t">6 · Foto “después”</div><p>mismas herramientas, comparar</p></div>
+    </div>
+    <div class="card" style="text-align:center"><p>Regla: <b>después de cada paso, <code>pytest</code> en verde</b>. Si no, no se avanza.<br>Y al final, el benchmark de la parte 1 de nuevo: <b>el refactor no puede hacerlo más lento</b>.</p></div>
+  </div>
+</section>
+
+<!-- 4 · Codigo redundante -->
+<section class="slide">
+  <div class="kicker">Eliminar código redundante</div>
+  <h2>Lo mismo, escrito una sola vez</h2>
+  <div class="body">
+    <div class="row" style="grid-template-columns:1.05fr 1fr">
+      <div>
+        <div class="chart-title">Lo que estaba duplicado</div>
+        <ul>
+          <li><b>El “menú” de algoritmos</b>, copiado en 3 archivos (CLI, paralelismo, visualizador) y con nombres distintos en cada uno.</li>
+          <li><b>El bucle de Dijkstra</b>, escrito dos veces: una para una consulta y otra para el árbol completo que usa la caché.</li>
+          <li><b>El mismo párrafo de documentación</b>, pegado en los 4 algoritmos.</li>
+          <li><b>Cronometrar</b>, repetido a mano en la CLI y el servidor.</li>
+          <li><b>“Resolver una consulta”</b>, igual en los modos secuencial, hilos y procesos.</li>
+          <li>Una función que nadie usaba y 5 trucos de <code>sys.path</code>.</li>
+        </ul>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="chart-title">Ejemplo: el árbol de caminos ahora reutiliza el bucle</div>
+<pre><span class="c"># antes: 30 líneas que copiaban el bucle</span>
+<span class="c"># después:</span>
+<span class="k">def</span> dijkstra_tree(graph, source):
+    dist, parent, _, _ = _search(graph, source,
+                                 target=<span class="k">None</span>)
+    <span class="k">return</span> dist, parent</pre>
+<pre><span class="c"># un único registro, lo usan todos</span>
+ALGORITHMS = {
+    <span class="s">"naive"</span>: dijkstra_naive, <span class="s">"heap"</span>: dijkstra_heap,
+    <span class="s">"astar"</span>: astar,          <span class="s">"bfs"</span>:  bfs,
+}</pre>
+        <p class="cap">Riesgo controlado: los 76 tests y el benchmark confirman que el resultado y el tiempo no cambiaron.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Testing con pytest -->
+<section class="slide">
+  <div class="kicker">Testing · Framework: pytest</div>
+  <h2>De un script casero a un framework de testing</h2>
+  <div class="body">
+    <div class="row" style="grid-template-columns:1fr 1fr">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card"><div class="t">Fixtures</div><p>Los grafos de prueba se arman en un solo lugar (<code>conftest.py</code>) y cada test los pide por nombre. Para archivos, <code>tmp_path</code> da una carpeta temporal que se borra sola.</p></div>
+        <div class="card"><div class="t">Parametrize</div><p>Un test se escribe una vez y corre por <b>cada familia de grafo × cada algoritmo</b>. Si falla uno, el reporte dice exactamente cuál.</p></div>
+        <div class="card"><div class="t">Oráculo independiente</div><p>Todo se compara contra Bellman-Ford, lento pero fácil de auditar: <b>una optimización que cambia el resultado es un bug</b>.</p></div>
+      </div>
+      <div>
+<pre><span class="k">@pytest</span>.mark.parametrize(<span class="s">"name"</span>, [<span class="s">"naive"</span>, <span class="s">"heap"</span>, <span class="s">"astar"</span>])
+<span class="k">def</span> test_costs_match_reference(graph, name):
+    <span class="k">for</span> s, t <span class="k">in</span> pairs(graph):
+        got = ALGORITHMS[name](graph, s, t).cost
+        <span class="k">assert</span> got == pytest.approx(
+            bellman_ford(graph, s)[t])</pre>
+        <p class="cap" style="margin:8px 0 18px">1 función → 12 tests (4 familias × 3 algoritmos)</p>
+        <div class="chart-title">Cobertura por módulo</div>
+        <div class="bars" id="chart-cov"></div>
+        <div class="legend"><span><i style="background:var(--muted-bar)"></i>Parte 1</span><span><i style="background:var(--accent)"></i>Parte 2</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5b · FastAPI -->
+<section class="slide">
+  <div class="kicker">Uso de un framework · FastAPI</div>
+  <h2>El visualizador pasa de un servidor a mano a FastAPI</h2>
+  <div class="body">
+    <div class="row" style="grid-template-columns:1fr 1.1fr">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <p>En la parte 1, <code>viz/server.py</code> usaba <code>http.server</code>: un <code>if</code> por ruta, parámetros parseados y validados a mano, cabeceras HTTP escritas una por una.</p>
+        <div class="card"><div class="t">Validación por tipos</div><p><code>desde: int</code>, <code>algo: Algoritmo</code>: un parámetro inválido devuelve <b>422</b> sin escribir validación.</p></div>
+        <div class="card"><div class="t">Documentación sola</div><p><code>/docs</code> genera una página interactiva (Swagger) para probar cada endpoint.</p></div>
+        <div class="card"><div class="t">Testeable sin levantar el servidor</div><p><code>TestClient</code>: 11 tests nuevos de la API sobre el mapa real de Córdoba.</p></div>
+        <p class="cap">Los cálculos no cambian: los endpoints llaman al mismo <code>src/</code>. Son CPU-bound, por eso se dejan como <code>def</code> (pool de hilos) y no <code>async</code>.</p>
+      </div>
+      <div>
+<pre><span class="c"># antes: http.server</span>
+<span class="k">def</span> do_GET(self):
+    url = urlparse(self.path)
+    q = {k: v[0] <span class="k">for</span> k, v <span class="k">in</span> parse_qs(url.query).items()}
+    <span class="k">if</span> url.path == <span class="s">"/api/ruta"</span>:
+        <span class="k">return</span> self.api_ruta(q)   <span class="c"># int(q["desde"])...</span>
+    ...
+
+<span class="c"># después: FastAPI</span>
+<span class="k">@app</span>.get(<span class="s">"/api/ruta"</span>)
+<span class="k">def</span> api_ruta(desde: int = Query(ge=0),
+             hasta: int = Query(ge=0),
+             algo: Algoritmo = Algoritmo.astar,
+             cache: bool = False) -> dict:
+    ...</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · PEP 8 -->
+<section class="slide">
+  <div class="kicker">Legibilidad y mantenibilidad · PEP 8</div>
+  <h2>El estilo lo revisa una herramienta, no una persona</h2>
+  <div class="body">
+    <div class="row" style="grid-template-columns:1fr 1.1fr">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <p><b>ruff</b> hace dos cosas: <b>formatea</b> el código (sangrías, espacios, largo de línea) y <b>lo revisa</b> según PEP 8, orden de imports, nombres y docstrings.</p>
+        <div class="row" style="gap:14px">
+          <div class="card"><div class="num bad">172</div><div class="cap">avisos en la parte 1</div></div>
+          <div class="card"><div class="num good">0</div><div class="cap">avisos en la parte 2</div></div>
+        </div>
+        <ul>
+          <li><b>Docstrings</b> estilo Google en toda función pública: después Sphinx los convierte en documentación.</li>
+          <li><b>Nombres:</b> se dejó la mezcla español/inglés que ya existía (renombrar todo es riesgo sin ganancia) y se fijó una regla para el código nuevo.</li>
+          <li>Config en <code>pyproject.toml</code>: todos usan las mismas reglas.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="chart-title">Qué tipo de avisos había (parte 1)</div>
+        <div class="bars" id="chart-ruff"></div>
+        <p class="cap" style="margin-top:10px">Ninguno era un error de ejecución: eran deudas de legibilidad. Por eso conviene automatizarlo antes de que se acumulen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · Sphinx -->
+<section class="slide">
+  <div class="kicker">Generación de documentación · Sphinx</div>
+  <h2>La documentación sale del mismo código</h2>
+  <div class="body" style="justify-content:flex-start">
+    <div class="row" style="grid-template-columns:.9fr 1.3fr;flex:1;min-height:0">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <p>En la parte 1 escribimos docstrings largos que explican <b>por qué</b> se eligió cada estructura. Sphinx los lee y arma un sitio web navegable.</p>
+        <div class="card"><div class="t">3 extensiones, nada más</div><p><code>autodoc</code> lee los docstrings · <code>napoleon</code> entiende el formato Google · <code>viewcode</code> enlaza al código fuente.</p></div>
+        <div class="card"><div class="t">Siempre actualizada</div><p>Si cambia el código, se regenera con un comando:<br><code>sphinx-build -b html docs docs/_build/html</code></p></div>
+      </div>
+      <div class="shotbox"><img class="shot" src="capturas/sphinx.png" alt="Página de la documentación generada por Sphinx"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · SonarQube -->
+<section class="slide">
+  <div class="kicker">Análisis de calidad · SonarQube</div>
+  <h2>Una segunda opinión automática, antes y después</h2>
+  <div class="body" style="justify-content:flex-start">
+    <div class="row" style="grid-template-columns:1fr 1.25fr;flex:1;min-height:0">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <p>SonarQube corrió en Docker sobre <b>el código de la parte 1</b> y <b>el de la parte 2</b>, con las mismas reglas.</p>
+        <div class="bars" id="chart-sonar"></div>
+        <div class="legend"><span><i style="background:var(--muted-bar)"></i>Parte 1</span><span><i style="background:var(--accent)"></i>Parte 2</span></div>
+        <p class="cap" data-k="sonar_nota">Deuda técnica: 220 min → 0. Cobertura según Sonar: 64,6% → 97% (lee el reporte de pytest-cov).</p>
+      </div>
+      <div class="shotbox"><img class="shot" src="capturas/sonar_despues.png" alt="Panel de SonarQube del proyecto en la parte 2"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · Archivos grandes: concepto -->
+<section class="slide">
+  <div class="kicker">Escritura y lectura de archivos grandes</div>
+  <h2>El despachante ahora recibe un archivo con un millón de pedidos</h2>
+  <div class="body">
+    <div class="vs">
+      <div class="card">
+        <h3><span class="tag pill-bad">Ingenuo</span>Todo de una vez</h3>
+        <ul>
+          <li>Lee el archivo <b>entero</b> a memoria.</li>
+          <li>Resuelve todas las consultas y las guarda.</li>
+          <li>Escribe <b>fila por fila</b>, avisándole al sistema operativo en cada una.</li>
+        </ul>
+        <p style="margin-top:10px">La memoria <b>crece con el archivo</b>. Con 10 millones de filas, no entra.</p>
+      </div>
+      <div class="card">
+        <h3><span class="tag pill-good">Optimizado</span>Una cinta transportadora</h3>
+        <ul>
+          <li><b>Batching:</b> un generador entrega de a 10.000 filas.</li>
+          <li><b>Buffer:</b> se escribe en bloques de 1 MB, un lote por llamada.</li>
+          <li><b>Paralelo:</b> cada lote se reparte entre 12 procesos, con un pool creado <b>una sola vez</b>.</li>
+        </ul>
+        <p style="margin-top:10px">La memoria queda <b>fija</b>, sea cual sea el tamaño del archivo.</p>
+      </div>
+    </div>
+<pre><span class="k">def</span> leer_lotes(ruta, tam_lote):
+    <span class="k">with</span> open(ruta, newline=<span class="s">""</span>, buffering=<span class="s">1 &lt;&lt; 20</span>) <span class="k">as</span> f:     <span class="c"># buffer de 1 MB</span>
+        lector = csv.reader(f); next(lector)
+        <span class="k">while</span> lote := list(islice(lector, tam_lote)):          <span class="c"># de a N filas</span>
+            <span class="k">yield</span> [(int(s), int(t)) <span class="k">for</span> s, t <span class="k">in</span> lote]</pre>
+  </div>
+</section>
+
+<!-- 10 · Archivos grandes: memoria -->
+<section class="slide">
+  <div class="kicker">Archivos grandes · Resultado 1</div>
+  <h2>La memoria deja de depender del tamaño del archivo</h2>
+  <div class="body">
+    <div class="row" style="grid-template-columns:1.35fr 1fr">
+      <div>
+        <div class="chart-title">Pico de memoria al procesar el archivo (solo lectura y escritura)</div>
+        <div class="bars" id="chart-mem"></div>
+        <div class="legend"><span><i style="background:var(--muted-bar)"></i>Ingenuo</span><span><i style="background:var(--accent)"></i>Lotes + buffer</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card"><div class="num" data-k="mem_ratio">25×</div><div class="cap">menos memoria con 1 millón de filas</div></div>
+        <div class="card"><div class="num" data-k="io_ratio">1,5×</div><div class="cap">más rápido: menos llamadas al sistema operativo gracias al buffer</div></div>
+        <p>La versión ingenua crece en línea recta. La de lotes queda plana: solo tiene en memoria <b>un lote a la vez</b>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · Archivos grandes: tiempo -->
+<section class="slide">
+  <div class="kicker">Archivos grandes · Resultado 2</div>
+  <h2>Con cálculo real, el cuello de botella es la CPU, no el disco</h2>
+  <div class="body">
+    <div class="row">
+      <div>
+        <div class="chart-title">50.000 consultas con A* (tiempo total)</div>
+        <div class="bars" id="chart-calc"></div>
+        <p style="margin-top:16px">Leer en lotes y con buffer apenas cambia el tiempo: <b>el 98% se va en calcular rutas</b>. El paralelismo sí ataca eso.</p>
+      </div>
+      <div>
+        <div class="chart-title">¿De qué tamaño conviene el lote? (procesos)</div>
+        <div class="bars" id="chart-lote"></div>
+        <p style="margin-top:16px"><b>Muy chico:</b> se pierde el tiempo coordinando procesos. <b>Muy grande:</b> no mejora y usa más memoria. El punto justo está entre 1.000 y 10.000.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · Scalene -->
+<section class="slide">
+  <div class="kicker">Herramienta de optimización del lenguaje · Scalene</div>
+  <h2>El perfilador que mira línea por línea</h2>
+  <div class="body">
+    <div class="row" style="grid-template-columns:1fr 1.15fr">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <p>En la parte 1, <code>cProfile</code> mostraba el baseline como una <b>caja negra</b>: solo dice qué función tarda, y los dos bucles lentos estaban dentro de la misma. Tuvimos que poner cronómetros a mano.</p>
+        <p><b>Scalene</b> mide <b>cada línea</b>, separa el tiempo de Python del tiempo de código nativo y además mide memoria. Sin tocar el código.</p>
+        <div class="card"><div class="t">Confirmó la parte 1 sin instrumentar nada</div><p data-k="scalene_texto">Sin un solo cronómetro, Scalene reparte el baseline igual que nuestra medición a mano: 66,6% / 32,4% (parte 1: 65,9% / 34,1%). Con el archivo de consultas: 96% calcular rutas, menos del 1% leer y escribir el CSV, y una sorpresa: la heurística de A* sola se lleva el 37%.</p></div>
+      </div>
+      <div>
+        <div class="chart-title">Las líneas más caras del baseline según Scalene</div>
+        <div class="bars" id="chart-scalene"></div>
+        <p class="cap" style="margin-top:10px">% del tiempo de CPU · <code>uvx --python 3.12 --from scalene==1.5.51 scalene --cli --cpu …</code></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · py-spy -->
+<section class="slide">
+  <div class="kicker">Herramienta de optimización del lenguaje · py-spy</div>
+  <h2>Un flamegraph: dónde se va el tiempo, de un vistazo</h2>
+  <div class="body" style="justify-content:flex-start">
+    <div class="row" style="grid-template-columns:.8fr 1.4fr;flex:1;min-height:0">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <p><b>py-spy</b> “espía” un programa que ya está corriendo, desde afuera: no hay que modificarlo ni reiniciarlo.</p>
+        <div class="card"><div class="t">Cómo se lee</div><p>Cada barra es una función; <b>el ancho es el tiempo</b> que consume. Las de abajo llaman a las de arriba.</p></div>
+        <div class="card"><div class="t">Qué muestra</div><p>Procesando un archivo: casi todo el ancho es <code>astar</code> y <code>heappush</code>. Leer y escribir el CSV casi no aparece.</p></div>
+      </div>
+      <div class="shotbox"><img class="shot" style="object-fit:contain;object-position:center" src="perfilado/flamegraph.svg" alt="Flamegraph de py-spy procesando un archivo de consultas"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 · Pyroscope -->
+<section class="slide">
+  <div class="kicker">Herramienta general (APM) · Grafana Pyroscope</div>
+  <h2>Monitoreo continuo: perfilar en producción, no solo en el laboratorio</h2>
+  <div class="body" style="justify-content:flex-start">
+    <div class="row" style="grid-template-columns:.8fr 1.4fr;flex:1;min-height:0">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <p>Es la misma idea que New Relic o Elastic APM, pero <b>open source</b>, corre local en Docker y <b>no pide cuenta</b>.</p>
+        <div class="card"><div class="t">Sin tocar la aplicación</div><p>Un script conecta el agente y etiqueta cada operación: <code>comparar</code>, <code>lote-cache</code>, <code>archivo</code>…</p></div>
+        <div class="card"><div class="t">Para qué sirve</div><p>Ver en una web qué operación consume más CPU a lo largo del tiempo, y compararlas filtrando por etiqueta.</p></div>
+      </div>
+      <div class="shotbox"><img class="shot" src="capturas/pyroscope.png" alt="Interfaz de Pyroscope con el perfil de la aplicación"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 · Sin regresiones -->
+<section class="slide">
+  <div class="kicker">Verificación</div>
+  <h2>Más limpio, y igual de rápido</h2>
+  <p class="lead">Se volvió a correr el benchmark completo de la parte 1 sobre el código refactorizado. Mismos grafos, misma semilla.</p>
+  <div class="body">
+    <div class="chart-title">Tabla comparativa de la parte 1 — 50 consultas, malla de 2.500 nodos (ms, menos es mejor)</div>
+    <div class="bars" id="chart-regresion"></div>
+    <div class="legend"><span><i style="background:var(--muted-bar)"></i>Código parte 1</span><span><i style="background:var(--accent)"></i>Código parte 2</span></div>
+    <p class="cap" data-k="regresion_nota">Mediana de 4 corridas. El baseline (fuera de escala) pasó de 9.539 ms a 9.264 ms. Todas las diferencias (−3% a +5%) están dentro del ruido normal entre corridas.</p>
+  </div>
+</section>
+
+<!-- 16 · Conclusiones -->
+<section class="slide">
+  <div class="kicker">Cierre</div>
+  <h2>Qué nos llevamos</h2>
+  <div class="body">
+    <div class="row3">
+      <div class="card"><div class="t">Los tests vienen primero</div><p>Con 76 tests y 97% de cobertura, refactorizar dejó de dar miedo. Sin ellos, cada cambio habría sido una apuesta.</p></div>
+      <div class="card"><div class="t">Medir antes de optimizar</div><p>Esperábamos que el disco fuera el problema con archivos grandes. Midiendo vimos que era la <b>memoria</b>, y que el tiempo se iba en la CPU.</p></div>
+      <div class="card"><div class="t">El lote es un trade-off</div><p>Lotes chicos desperdician tiempo coordinando procesos, y los grandes gastan memoria. El tamaño correcto se mide, no se adivina.</p></div>
+      <div class="card"><div class="t">Automatizar la calidad</div><p>ruff, SonarQube y Sphinx corren solos. La calidad no depende de que alguien se acuerde.</p></div>
+      <div class="card"><div class="t">Cada herramienta, su pregunta</div><p>cProfile: ¿qué función? Scalene: ¿qué línea? py-spy: ¿qué pasa ahora? Pyroscope: ¿qué pasa siempre?</p></div>
+      <div class="card"><div class="t">Qué haríamos distinto</div><p>Empezar la parte 1 ya con pytest y ruff: la deuda de estilo y de tests se acumula rápido.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 · Demo -->
+<section class="slide">
+  <div class="kicker">Demostración</div>
+  <h2>Cómo correrlo en vivo</h2>
+  <div class="body">
+<pre><span class="c"># tests + cobertura</span>
+pytest --cov --cov-report=term-missing
+
+<span class="c"># archivo grande: generar 1M de consultas y resolverlas por lotes en paralelo</span>
+python -m src.cli generar-consultas --size 2000 --n 1000000 --salida consultas.csv
+python -m src.cli archivo --size 2000 --entrada consultas.csv --salida respuestas.csv --lote 10000
+
+<span class="c"># calidad y documentación</span>
+ruff check . &amp;&amp; ruff format --check .
+sphinx-build -b html docs docs/_build/html
+
+<span class="c"># perfilado</span>
+uvx --python 3.12 --from scalene==1.5.51 scalene --cli --cpu --profile-all \
+    --profile-exclude threading bench/cargas_perfilado.py --- baseline
+py-spy record -o flame.svg -- python -m src.cli archivo --entrada consultas.csv --secuencial</pre>
+    <p class="cap">Todos los resultados están en la carpeta <code>resultados-parte-2/</code>.</p>
+  </div>
+</section>
+
+</main>
+<nav class="nav">
+  <button id="prev" aria-label="Anterior">←</button>
+  <button id="count" aria-label="Número de diapositiva">1 / 1</button>
+  <button id="next" aria-label="Siguiente">→</button>
+  <button id="theme" aria-label="Cambiar tema">◐</button>
+</nav>
+
+<script>
+/* ===== Datos (salen de resultados-parte-2/) ===== */
+const DATA = {
+  cov: [ // [modulo, antes, despues]
+    ["cli.py", 0, 96], ["parallel.py", 0, 90], ["cache.py", 87, 96],
+    ["archivos.py (nuevo)", 0, 100], ["algoritmos", 96, 97], ["Total", 65, 97],
+  ],
+  ruff: [["Docstrings faltantes / mal formados", 103], ["Líneas demasiado largas", 36],
+         ["Imports fuera de lugar", 21], ["Posibles bugs (zip, lambdas)", 8], ["Otros", 4]],
+  sonar: [ // [metrica, parte 1, parte 2] (resultados-parte-2/sonarqube/)
+    ["Code smells", 17, 0], ["Vulnerabilidades", 11, 0], ["Bugs", 1, 0],
+  ],
+  mem: [ // filas, ingenuo MB, lotes MB
+    ["100.000 filas", 19.0, 7.5], ["500.000 filas", 95.0, 7.5], ["1.000.000 filas", 190.1, 7.5],
+  ],
+  calc: [["Ingenuo", 14058], ["Lotes + buffer", 13703], ["Lotes + buffer + procesos", 2829]],
+  lote: [["10 filas", 22003], ["100", 7081], ["1.000", 2993], ["10.000", 2831], ["50.000", 2920]],
+  scalene: [ // scalene 1.5.51 --cpu, Python 3.12 (perfilado/scalene_baseline.*)
+    ["Barrido de todas las aristas (línea 65)", 66.6], ["Mínimo por barrido lineal (línea 46)", 32.4],
+  ],
+  regresion: [ // mediana de 4 corridas (regresion_raw.txt); baseline aparte por escala
+    ["Estructura optimizada", 36.8, 36.8], ["Algoritmo optimizado", 23.9, 24.2],
+    ["Concurrencia / paralelismo", 49.6, 51.9], ["Versión final", 6.8, 6.6],
+  ],
+};
+
+/* ===== Graficos de barras simples (HTML) ===== */
+const tip = document.getElementById("tip");
+const fmt = (v, u) => v.toLocaleString("es-AR", {maximumFractionDigits: 1}) + (u || "");
+function hoverable(el, text){
+  el.addEventListener("mousemove", e => { tip.textContent = text; tip.style.opacity = 1;
+    tip.style.left = (e.clientX + 12) + "px"; tip.style.top = (e.clientY - 30) + "px"; });
+  el.addEventListener("mouseleave", () => tip.style.opacity = 0);
+}
+function bars(id, rows, {unit = "", pair = false, hiLast = false, hiMin = false, labels = ["Antes", "Después"]} = {}){
+  const box = document.getElementById(id); if (!box || !rows.length) return;
+  const max = Math.max(...rows.flatMap(r => r.slice(1)));
+  const minV = Math.min(...rows.map(r => r[1]));
+  rows.forEach((r, i) => {
+    const series = pair ? [[r[1], false, labels[0]], [r[2], true, labels[1]]]
+                        : [[r[1], hiLast ? i === rows.length - 1 : hiMin ? r[1] === minV : true, r[0]]];
+    series.forEach(([v, hi, name], j) => {
+      const row = document.createElement("div"); row.className = "bar-row";
+      if (pair) row.style.marginTop = j === 0 && i > 0 ? "6px" : "0";
+      row.innerHTML = `<div class="lab">${j === 0 ? r[0] : ""}</div>
+        <div class="track"><div class="fill ${hi ? "hi" : ""}" style="width:${Math.max(0.6, 100 * v / max)}%"></div></div>
+        <div class="val">${fmt(v, unit)}</div>`;
+      if (pair) row.querySelector(".track").style.height = "18px";
+      hoverable(row.querySelector(".fill"), `${r[0]} · ${name}: ${fmt(v, unit)}`);
+      box.appendChild(row);
+    });
+  });
+}
+bars("chart-cov", DATA.cov, {unit: "%", pair: true, labels: ["Parte 1", "Parte 2"]});
+bars("chart-ruff", DATA.ruff, {});
+bars("chart-sonar", DATA.sonar, {pair: true, labels: ["Parte 1", "Parte 2"]});
+bars("chart-mem", DATA.mem, {unit: " MB", pair: true, labels: ["Ingenuo", "Lotes + buffer"]});
+bars("chart-calc", DATA.calc, {unit: " ms", hiLast: true});
+bars("chart-lote", DATA.lote, {unit: " ms", hiMin: true});
+bars("chart-scalene", DATA.scalene, {unit: "%"});
+bars("chart-regresion", DATA.regresion, {unit: " ms", pair: true, labels: ["Parte 1", "Parte 2"]});
+
+/* ===== Navegacion ===== */
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+try { cur = Math.min(slides.length - 1, +(location.hash.slice(1)) - 1 || 0); } catch (e) {}
+function fit(){
+  const s = Math.min(innerWidth / 1340, innerHeight / 780);
+  slides.forEach(sl => sl.style.transform = `scale(${s})`);
+}
+function show(i){
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, j) => s.classList.toggle("on", j === cur));
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("progress").style.width = `${100 * (cur + 1) / slides.length}%`;
+  try { history.replaceState(null, "", "#" + (cur + 1)); } catch (e) {}
+}
+addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  if (e.key === "Home") show(0);
+  if (e.key === "End") show(slides.length - 1);
+});
+document.getElementById("prev").onclick = () => show(cur - 1);
+document.getElementById("next").onclick = () => show(cur + 1);
+document.getElementById("theme").onclick = () => {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark";
+};
+addEventListener("resize", fit); fit(); show(cur);
+</script>
+</body>
+</html>

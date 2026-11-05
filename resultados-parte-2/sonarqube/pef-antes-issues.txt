@@ -1,0 +1,29 @@
+CODE_SMELL    python:S3776           bench/profile_run.py:125                 [OPEN] Refactor this function to reduce its Cognitive Complexity from 31 to the 15 allowed.
+CODE_SMELL    python:S3776           bench/run_bench.py:99                    [OPEN] Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.
+CODE_SMELL    python:S1515           bench/run_bench.py:209                   [OPEN] Add a parameter to the parent lambda function and use variable "queries" as its default va
+CODE_SMELL    python:S1515           bench/run_bench.py:210                   [OPEN] Add a parameter to the parent lambda function and use variable "queries" as its default va
+CODE_SMELL    python:S1515           bench/run_bench.py:211                   [OPEN] Add a parameter to the parent lambda function and use variable "queries" as its default va
+CODE_SMELL    python:S5713           data/fetch_cordoba.py:92                 [OPEN] Remove this redundant Exception class; it derives from another which is already caught.
+CODE_SMELL    python:S5713           data/fetch_cordoba.py:92                 [OPEN] Remove this redundant Exception class; it derives from another which is already caught.
+CODE_SMELL    python:S3776           data/fetch_cordoba.py:107                [OPEN] Refactor this function to reduce its Cognitive Complexity from 55 to the 15 allowed.
+CODE_SMELL    python:S3776           src/algorithms/dijkstra_naive.py:41      [OPEN] Refactor this function to reduce its Cognitive Complexity from 24 to the 15 allowed.
+CODE_SMELL    python:S1481           src/cli.py:113                           [OPEN] Replace the unused local variable "out" with "_".
+VULNERABILITY python:S2245           src/graph.py:173                         [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/graph.py:174                         [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/graph.py:200                         [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/graph.py:207                         [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/graph.py:207                         [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/parallel.py:174                      [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/parallel.py:175                      [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/parallel.py:175                      [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/parallel.py:176                      [OPEN] Make sure that using this pseudorandom number generator is safe here.
+VULNERABILITY python:S2245           src/parallel.py:176                      [OPEN] Make sure that using this pseudorandom number generator is safe here.
+CODE_SMELL    python:S9073           tests/test_correctness.py:60             [OPEN] Split this composite assertion into separate assertions.
+CODE_SMELL    python:S9073           tests/test_correctness.py:202            [OPEN] Split this composite assertion into separate assertions.
+CODE_SMELL    css:S7924              viz/index.html:33                        [OPEN] Text does not meet the minimal contrast requirement with its background.
+CODE_SMELL    Web:S6853              viz/index.html:223                       [OPEN] A form label must be associated with a control and have accessible text.
+BUG           Web:InputWithoutLabelCheck viz/index.html:224                       [OPEN] Associate a valid label to this input field.
+CODE_SMELL    javascript:S7721       viz/index.html:504                       [OPEN] Move function 'setCmp' to the outer scope.
+CODE_SMELL    javascript:S7785       viz/index.html:607                       [OPEN] Prefer top-level await over an async function `cargar` call.
+CODE_SMELL    python:S1192           viz/server.py:72                         [OPEN] Define a constant instead of duplicating this literal "application/json" 3 times.
+VULNERABILITY python:S5332           viz/server.py:242                        [OPEN] Using HTTP protocol is insecure. Use HTTPS instead.

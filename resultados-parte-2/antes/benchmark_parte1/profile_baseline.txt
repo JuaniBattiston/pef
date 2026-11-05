@@ -1,0 +1,18 @@
+BASELINE  dijkstra_naive  (5 consultas, V=2500)
+===============================================
+
+         137 function calls in 0.608 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        5    0.608    0.122    0.608    0.122 /Users/franciscomunoz/Downloads/pef/src/algorithms/dijkstra_naive.py:41(dijkstra_naive)
+        1    0.000    0.000    0.608    0.608 /Users/franciscomunoz/Downloads/pef/bench/profile_run.py:71(<listcomp>)
+        5    0.000    0.000    0.000    0.000 /Users/franciscomunoz/Downloads/pef/src/algorithms/base.py:31(rebuild_path)
+        5    0.000    0.000    0.000    0.000 <string>:2(__init__)
+      114    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.608    0.608 /Users/franciscomunoz/Downloads/pef/bench/profile_run.py:71(<lambda>)
+        5    0.000    0.000    0.000    0.000 {method 'reverse' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+

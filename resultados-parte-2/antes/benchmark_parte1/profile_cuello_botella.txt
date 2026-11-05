@@ -1,0 +1,15 @@
+ATRIBUCION DEL CUELLO DE BOTELLA -- BASELINE
+============================================
+
+Grafo grid V=2500, E=4900; 5 consultas.
+
+  (a) seleccion del minimo por barrido lineal  O(V^2)     0.206 s  ( 32.8%)
+  (b) busqueda de vecinos sobre lista de aristas O(V*E)    0.421 s  ( 67.2%)
+
+Conclusion: la fase dominante es (b). Por eso la primera optimizacion
+aplicada fue la lista de adyacencia y no el heap: atacar (a) primero
+habria dejado intacto el grueso del costo. El heap se aplica despues,
+cuando (a) pasa a ser el termino dominante.
+
+Advertencia metodologica: la instrumentacion inflacta los tiempos
+absolutos; la lectura valida es la proporcion entre fases.

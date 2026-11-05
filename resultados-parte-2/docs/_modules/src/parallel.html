@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html lang="es" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>src.parallel &#8212; documentación de Planificador de rutas - 2.0</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=19a2ea7e" />
+    <script src="../../_static/documentation_options.js?v=db497106"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/translations.js?v=f85f4cfb"></script>
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fuente para src.parallel</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""CONCURRENCIA Y PARALELISMO (fila 4 de la tabla).</span>
+
+<span class="sd">Que tareas se ejecutan simultaneamente</span>
+<span class="sd">    Consultas de rutas distintas de un mismo lote. Un despachante que recibe</span>
+<span class="sd">    200 pedidos de ruta puede resolverlos en cualquier orden.</span>
+
+<span class="sd">Por que son independientes</span>
+<span class="sd">    Cada consulta solo LEE el grafo; ninguna lo modifica. No hay estado</span>
+<span class="sd">    compartido mutable, por lo tanto no hay condiciones de carrera ni hace</span>
+<span class="sd">    falta sincronizacion. Los vectores dist/parent son locales a cada</span>
+<span class="sd">    invocacion. Es paralelismo de datos puro (embarazosamente paralelo).</span>
+
+<span class="sd">Que mecanismo usa el lenguaje, y por que este y no otro</span>
+<span class="sd">    `concurrent.futures`, con las dos implementaciones para poder comparar:</span>
+
+<span class="sd">      ThreadPoolExecutor  -- NO deberia acelerar. Dijkstra es CPU-bound puro</span>
+<span class="sd">          y el GIL (Global Interpreter Lock) permite ejecutar bytecode de</span>
+<span class="sd">          Python en un solo hilo a la vez. Se mide igual, porque mostrar que</span>
+<span class="sd">          los hilos no ayudan es parte del analisis: el error tipico es</span>
+<span class="sd">          asumir que "usar threads" es optimizar.</span>
+
+<span class="sd">      ProcessPoolExecutor -- si acelera. Cada proceso tiene su propio</span>
+<span class="sd">          interprete y su propio GIL, asi que los nucleos se usan de verdad.</span>
+
+<span class="sd">Que problemas pueden aparecer</span>
+<span class="sd">    1. Costo de serializacion. Enviar el grafo a cada worker en cada tarea lo</span>
+<span class="sd">       serializa una y otra vez, y para V=10.000 eso puede costar mas que el</span>
+<span class="sd">       calculo. Solucion aplicada: `initializer`, que construye el grafo UNA</span>
+<span class="sd">       vez por proceso. Como la generacion es determinista a partir de</span>
+<span class="sd">       (familia, tamano, semilla), se manda esa especificacion de tres campos</span>
+<span class="sd">       en lugar del grafo entero.</span>
+<span class="sd">       En Python 3.14 esto es obligatorio y no una mejora: el metodo de</span>
+<span class="sd">       arranque por defecto en Linux ya no es fork, asi que los workers no</span>
+<span class="sd">       heredan la memoria del padre.</span>
+<span class="sd">    2. Overhead de arranque. Crear procesos cuesta decenas de milisegundos.</span>
+<span class="sd">       Con lotes chicos ese costo domina y la version paralela sale PEOR que</span>
+<span class="sd">       la secuencial. El benchmark barre tamanos de lote justamente para</span>
+<span class="sd">       encontrar el punto de cruce.</span>
+<span class="sd">    3. Granularidad. Una tarea por consulta genera mucho ida y vuelta entre</span>
+<span class="sd">       procesos. Se usa `chunksize` para agrupar consultas por envio.</span>
+<span class="sd">    4. Payload de vuelta. Se devuelve solo el costo y la longitud del camino,</span>
+<span class="sd">       no el camino completo, para no serializar listas largas de nodos.</span>
+
+<span class="sd">Lo que NO se paralelizo, y por que</span>
+<span class="sd">    Un solo Dijkstra. Es inherentemente secuencial: cada extraccion del</span>
+<span class="sd">    minimo depende de las relajaciones de la anterior. Paralelizarlo requiere</span>
+<span class="sd">    algoritmos distintos (delta-stepping) y sincronizacion, con lo cual el</span>
+<span class="sd">    costo de coordinacion se comeria la ganancia a esta escala.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessPoolExecutor</span><span class="p">,</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.algorithms</span><span class="w"> </span><span class="kn">import</span> <span class="n">ALGORITHMS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">generate</span>
+
+<span class="n">Query</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+<span class="n">Answer</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>  <span class="c1"># (costo, cantidad de nodos del camino)</span>
+
+
+<div class="viewcode-block" id="GraphSpec">
+<a class="viewcode-back" href="../../api/nucleo.html#src.parallel.GraphSpec">[documentos]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GraphSpec</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Receta reproducible de un grafo. Barata de serializar: 3 campos."""</span>
+
+    <span class="n">family</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span>
+
+<div class="viewcode-block" id="GraphSpec.build">
+<a class="viewcode-back" href="../../api/nucleo.html#src.parallel.GraphSpec.build">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Construye el grafo descripto por esta receta."""</span>
+        <span class="c1"># El mapa real entra por la misma puerta que los sinteticos: los</span>
+        <span class="c1"># workers lo reconstruyen desde el JSON en vez de recibirlo serializado.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">family</span> <span class="o">==</span> <span class="s2">"cordoba"</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.osm</span><span class="w"> </span><span class="kn">import</span> <span class="n">cargar_cordoba</span>
+
+            <span class="k">return</span> <span class="n">cargar_cordoba</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># --- estado por worker -----------------------------------------------------</span>
+<span class="c1"># Un unico grafo por proceso, construido en el initializer. Es de solo</span>
+<span class="c1"># lectura, asi que compartirlo entre tareas del mismo worker es seguro.</span>
+
+<span class="n">_WORKER_GRAPH</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">_WORKER_ALGO</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_worker</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">GraphSpec</span><span class="p">,</span> <span class="n">algo_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">global</span> <span class="n">_WORKER_GRAPH</span><span class="p">,</span> <span class="n">_WORKER_ALGO</span>
+    <span class="n">_WORKER_GRAPH</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+    <span class="n">_WORKER_ALGO</span> <span class="o">=</span> <span class="n">ALGORITHMS</span><span class="p">[</span><span class="n">algo_name</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_answer</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Query</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Answer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resuelve una consulta y devuelve solo (costo, nodos del camino)."""</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">algo</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">query</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">query</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_solve_in_worker</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="n">Query</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Answer</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">_answer</span><span class="p">(</span><span class="n">_WORKER_ALGO</span><span class="p">,</span> <span class="n">_WORKER_GRAPH</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+
+
+<span class="c1"># --- estrategias -----------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="solve_sequential">
+<a class="viewcode-back" href="../../api/nucleo.html#src.parallel.solve_sequential">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_sequential</span><span class="p">(</span><span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">queries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Query</span><span class="p">],</span> <span class="n">algo_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"heap"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Answer</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Resuelve el lote en el hilo actual, una consulta tras otra."""</span>
+    <span class="n">algo</span> <span class="o">=</span> <span class="n">ALGORITHMS</span><span class="p">[</span><span class="n">algo_name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_answer</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">queries</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="solve_threads">
+<a class="viewcode-back" href="../../api/nucleo.html#src.parallel.solve_threads">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_threads</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">queries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Query</span><span class="p">],</span> <span class="n">algo_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"heap"</span><span class="p">,</span> <span class="n">workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Answer</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Hilos. Se espera que NO mejore.</span>
+
+<span class="sd">    La carga es CPU-bound y el GIL serializa la ejecucion de bytecode.</span>
+<span class="sd">    Se mide para documentarlo con numeros.</span>
+<span class="sd">    """</span>
+    <span class="n">algo</span> <span class="o">=</span> <span class="n">ALGORITHMS</span><span class="p">[</span><span class="n">algo_name</span><span class="p">]</span>
+    <span class="n">workers</span> <span class="o">=</span> <span class="n">workers</span> <span class="ow">or</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">_answer</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">q</span><span class="p">),</span> <span class="n">queries</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="process_pool">
+<a class="viewcode-back" href="../../api/nucleo.html#src.parallel.process_pool">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_pool</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">GraphSpec</span><span class="p">,</span> <span class="n">algo_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"heap"</span><span class="p">,</span> <span class="n">workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Crea un pool de procesos donde cada worker ya tiene el grafo construido.</span>
+
+<span class="sd">    Se puede reutilizar para muchos lotes seguidos (ver `src/archivos.py`):</span>
+<span class="sd">    el arranque de los procesos se paga una sola vez.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">ProcessPoolExecutor</span><span class="p">(</span>
+        <span class="n">max_workers</span><span class="o">=</span><span class="n">workers</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="n">_init_worker</span><span class="p">,</span>
+        <span class="n">initargs</span><span class="o">=</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">algo_name</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="solve_in_pool">
+<a class="viewcode-back" href="../../api/nucleo.html#src.parallel.solve_in_pool">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_in_pool</span><span class="p">(</span><span class="n">pool</span><span class="p">:</span> <span class="n">ProcessPoolExecutor</span><span class="p">,</span> <span class="n">queries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Query</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Answer</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Reparte un lote entre los workers, agrupando consultas por envio."""</span>
+    <span class="n">chunksize</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">queries</span><span class="p">)</span> <span class="o">//</span> <span class="p">((</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_solve_in_worker</span><span class="p">,</span> <span class="n">queries</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="solve_processes">
+<a class="viewcode-back" href="../../api/nucleo.html#src.parallel.solve_processes">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_processes</span><span class="p">(</span>
+    <span class="n">spec</span><span class="p">:</span> <span class="n">GraphSpec</span><span class="p">,</span> <span class="n">queries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Query</span><span class="p">],</span> <span class="n">algo_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"heap"</span><span class="p">,</span> <span class="n">workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Answer</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Procesos. Recibe la ESPECIFICACION del grafo, no el grafo.</span>
+
+<span class="sd">    Cada worker lo reconstruye una sola vez en su initializer.</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">process_pool</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">algo_name</span><span class="p">,</span> <span class="n">workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">solve_in_pool</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="n">queries</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="make_queries">
+<a class="viewcode-back" href="../../api/nucleo.html#src.parallel.make_queries">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_queries</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">11</span><span class="p">,</span> <span class="n">hot_sources</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Query</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Genera un lote de consultas.</span>
+
+<span class="sd">    `hot_sources &gt; 0` simula la carga real de un despachante: unos pocos</span>
+<span class="sd">    origenes concentran el trafico. Es el escenario donde la cache rinde.</span>
+<span class="sd">    Con hot_sources = 0 los origenes son uniformes: el peor caso para cachear.</span>
+<span class="sd">    """</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hot_sources</span><span class="p">:</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">rng</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">hot_sources</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">rng</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Planificador de rutas</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navegación</h3>
+<p class="caption" role="heading"><span class="caption-text">Modulos</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/algoritmos.html">Algoritmos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/nucleo.html">Grafo, cache, paralelismo y archivos</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Código de módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,8 @@
+antes {"1_baseline": 8572.35, "2_estructuras": 34.575, "3_algoritmo": 22.595, "4_paralelismo": 54.737, "5_final": 5.853}
+despues {"1_baseline": 9148.389, "2_estructuras": 38.394, "3_algoritmo": 24.492, "4_paralelismo": 53.729, "5_final": 6.715}
+antes {"1_baseline": 9887.896, "2_estructuras": 37.52, "3_algoritmo": 24.264, "4_paralelismo": 60.583, "5_final": 6.798}
+despues {"1_baseline": 9356.152, "2_estructuras": 35.667, "3_algoritmo": 23.432, "4_paralelismo": 50.002, "5_final": 6.51}
+antes {"1_baseline": 9189.034, "2_estructuras": 36.077, "3_algoritmo": 23.652, "4_paralelismo": 42.076, "5_final": 12.178}
+despues {"1_baseline": 9172.539, "2_estructuras": 34.127, "3_algoritmo": 26.991, "4_paralelismo": 53.782, "5_final": 7.871}
+antes {"1_baseline": 9908.766, "2_estructuras": 39.259, "3_algoritmo": 24.109, "4_paralelismo": 44.398, "5_final": 6.85}
+despues {"1_baseline": 9550.652, "2_estructuras": 37.948, "3_algoritmo": 23.81, "4_paralelismo": 47.915, "5_final": 5.705}

@@ -1,0 +1,15 @@
+           /home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/dijkstra_naive.py: % of time =  99.76% (14.705s) out of 14.741s.            
+      ╷       ╷       ╷       ╷        ╷       ╷                ╷       ╷                                                                            
+      │Time   │–––––– │–––––– │Memory  │–––––– │–––––––––––     │Copy   │                                                                            
+  Li… │Python │native │system │Python  │peak   │timeline/%      │(MB/s) │/home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/dijkstra_na…  
+╺━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
+  ... │       │       │       │        │       │                │       │                                                                            
+   46 │   43% │       │       │        │       │                │       │            if not visited[i] and dist[i] < best:                           
+  ... │       │       │       │        │       │                │       │                                                                            
+   65 │   53% │       │   1%  │        │       │                │       │                continue                                                    
+  ... │       │       │       │        │       │                │       │                                                                            
+      │       │       │       │        │       │                │       │                                                                            
+╶─────┼───────┼───────┼───────┼────────┼───────┼────────────────┼───────┼───────────────────────────────────────────────────────────────────────────╴
+      │       │       │       │        │       │                │       │function summary for /home/hudson-hornet/Desktop/personal/pef 3/pef/src/a…  
+   33 │   97% │       │   2%  │        │       │                │       │dijkstra_naive                                                              
+      ╵       ╵       ╵       ╵        ╵       ╵                ╵       ╵                                                                            

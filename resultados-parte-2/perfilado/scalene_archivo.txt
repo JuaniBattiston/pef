@@ -1,0 +1,71 @@
+                                                 Memory usage: █ (max: 10.000 MB, growth rate: 100%)                                                 
+                /home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/astar.py: % of time =  59.05% (10.656s) out of 18.044s.                
+      ╷       ╷       ╷       ╷        ╷       ╷                ╷       ╷                                                                            
+      │Time   │–––––– │–––––– │Memory  │–––––– │–––––––––––     │Copy   │                                                                            
+  Li… │Python │native │system │Python  │peak   │timeline/%      │(MB/s) │/home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/astar.py      
+╺━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
+  ... │       │       │       │        │       │                │       │                                                                            
+   52 │    2% │       │       │        │       │                │       │    while frontier:                                                         
+   53 │   20% │       │       │        │       │                │       │        _, g_u, u = heapq.heappop(frontier)                                 
+  ... │       │       │       │        │       │                │       │                                                                            
+   55 │    1% │       │       │        │       │                │       │            continue                                                        
+   56 │    5% │       │       │        │       │                │       │        visited.add(u)                                                      
+  ... │       │       │       │        │       │                │       │                                                                            
+   64 │   12% │       │       │        │       │                │       │            if v not in visited and ng < g_score[v]:                        
+  ... │       │       │       │        │       │                │       │                                                                            
+   67 │   12% │       │       │        │       │                │       │                heapq.heappush(frontier, (ng + h(v, target), ng, v))        
+   68 │    3% │       │       │        │       │                │       │                pushes += 1                                                 
+  ... │       │       │       │        │       │                │       │                                                                            
+      │       │       │       │        │       │                │       │                                                                            
+╶─────┼───────┼───────┼───────┼────────┼───────┼────────────────┼───────┼───────────────────────────────────────────────────────────────────────────╴
+      │       │       │       │        │       │                │       │function summary for /home/hudson-hornet/Desktop/personal/pef 3/pef/src/a…  
+   40 │   57% │       │   1%  │        │       │                │       │astar                                                                       
+      ╵       ╵       ╵       ╵        ╵       ╵                ╵       ╵                                                                            
+                      /home/hudson-hornet/Desktop/personal/pef 3/pef/src/graph.py: % of time =  36.58% (6.600s) out of 18.044s.                      
+      ╷       ╷       ╷       ╷        ╷       ╷                ╷       ╷                                                                            
+      │Time   │–––––– │–––––– │Memory  │–––––– │–––––––––––     │Copy   │                                                                            
+  Li… │Python │native │system │Python  │peak   │timeline/%      │(MB/s) │/home/hudson-hornet/Desktop/personal/pef 3/pef/src/graph.py                 
+╺━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
+  ... │       │       │       │        │       │                │       │                                                                            
+   97 │    1% │       │       │        │       │                │       │    def euclid(self, u: int, v: int) -> float:                              
+  ... │       │       │       │        │       │                │       │                                                                            
+  100 │   14% │       │       │        │       │                │       │        return math.hypot(x1 - x2, y1 - y2)                                 
+  ... │       │       │       │        │       │                │       │                                                                            
+  102 │   21% │       │       │        │       │                │       │    def heuristic(self, u: int, goal: int) -> float:                        
+  ... │       │       │       │        │       │                │       │                                                                            
+      │       │       │       │        │       │                │       │                                                                            
+╶─────┼───────┼───────┼───────┼────────┼───────┼────────────────┼───────┼───────────────────────────────────────────────────────────────────────────╴
+      │       │       │       │        │       │                │       │function summary for /home/hudson-hornet/Desktop/personal/pef 3/pef/src/g…  
+   97 │   15% │       │       │        │       │                │       │Graph.euclid                                                                
+  102 │   21% │       │       │        │       │                │       │Graph.heuristic                                                             
+      ╵       ╵       ╵       ╵        ╵       ╵                ╵       ╵                                                                            
+                   /home/hudson-hornet/Desktop/personal/pef 3/pef/src/parallel.py: % of time =   2.77% (499.863ms) out of 18.044s.                   
+      ╷       ╷       ╷       ╷        ╷       ╷                ╷       ╷                                                                            
+      │Time   │–––––– │–––––– │Memory  │–––––– │–––––––––––     │Copy   │                                                                            
+  Li… │Python │native │system │Python  │peak   │timeline/%      │(MB/s) │/home/hudson-hornet/Desktop/personal/pef 3/pef/src/parallel.py              
+╺━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
+  ... │       │       │       │        │       │                │       │                                                                            
+  114 │    3% │       │       │        │       │                │       │    return [_answer(algo, graph, q) for q in queries]                       
+  ... │       │       │       │        │       │                │       │                                                                            
+      │       │       │       │        │       │                │       │                                                                            
+╶─────┼───────┼───────┼───────┼────────┼───────┼────────────────┼───────┼───────────────────────────────────────────────────────────────────────────╴
+      │       │       │       │        │       │                │       │function summary for /home/hudson-hornet/Desktop/personal/pef 3/pef/src/p…  
+  111 │    3% │       │       │        │       │                │       │solve_sequential                                                            
+      ╵       ╵       ╵       ╵        ╵       ╵                ╵       ╵                                                                            
+                   /home/hudson-hornet/Desktop/personal/pef 3/pef/src/archivos.py: % of time =   0.75% (135.646ms) out of 18.044s.                   
+      ╷       ╷       ╷       ╷        ╷       ╷                ╷       ╷                                                                            
+      │Time   │–––––– │–––––– │Memory  │–––––– │–––––––––––     │Copy   │                                                                            
+  Li… │Python │native │system │Python  │peak   │timeline/%      │(MB/s) │/home/hudson-hornet/Desktop/personal/pef 3/pef/src/archivos.py              
+╺━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━┿━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
+  ... │       │       │       │        │       │                │       │                                                                            
+   63 │       │       │       │ 100%   │   10M │█ 100%          │       │        while lote := list(islice(lector, tam_lote)):                       
+  ... │       │       │       │        │       │                │       │                                                                            
+      │       │       │       │        │       │                │       │                                                                            
+╶─────┼───────┼───────┼───────┼────────┼───────┼────────────────┼───────┼───────────────────────────────────────────────────────────────────────────╴
+      │       │       │       │        │       │                │       │function summary for /home/hudson-hornet/Desktop/personal/pef 3/pef/src/a…  
+   58 │       │       │       │ 100%   │   10M │█ 100%          │       │leer_lotes                                                                  
+      ╵       ╵       ╵       ╵        ╵       ╵                ╵       ╵                                                                            
+Top AVERAGE memory consumption, by line:
+(1)    63:    10 MB                                                                                                                                   
+Top PEAK memory consumption, by line:
+(1)    63:    10 MB                                                                                                                                   

@@ -1,0 +1,24 @@
+PERFILADO DE MEMORIA (tracemalloc)
+==================================
+
+dijkstra_heap sin cache, 100 consultas, V=64000
+  pico: 4.77 MB   retenido al final: 0.03 MB
+  principales lineas asignadoras:
+    dijkstra_heap.py:88       0.01 MB  (81 bloques)
+    dijkstra_heap.py:85       0.01 MB  (101 bloques)
+    base.py:35       0.00 MB  (75 bloques)
+    dijkstra_heap.py:93       0.00 MB  (40 bloques)
+    <string>:3        0.00 MB  (39 bloques)
+
+RouteCache capacidad 64, 100 consultas, V=64000
+  pico: 14.94 MB   retenido al final: 0.02 MB
+  principales lineas asignadoras:
+    cache.py:112      0.00 MB  (23 bloques)
+    cache.py:117      0.00 MB  (39 bloques)
+    <string>:3        0.00 MB  (38 bloques)
+    dijkstra_heap.py:119      0.00 MB  (100 bloques)
+    base.py:35       0.00 MB  (32 bloques)
+
+Lectura: la cache cambia tiempo por memoria. Cada entrada guarda dos
+vectores de V elementos (dist y parent), asi que la memoria retenida
+crece con capacidad * V. Es el trade-off explicito de la version final.

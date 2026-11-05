@@ -1,0 +1,22 @@
+OPTIMIZADO  dijkstra_heap  (20 consultas, V=64000)
+==================================================
+
+         1978744 function calls in 0.752 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       20    0.463    0.023    0.738    0.037 /home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/dijkstra_heap.py:52(_search)
+   696567    0.161    0.000    0.161    0.000 {built-in method _heapq.heappop}
+   703149    0.063    0.000    0.063    0.000 {built-in method _heapq.heappush}
+   576039    0.052    0.000    0.052    0.000 {method 'add' of 'set' objects}
+        1    0.009    0.009    0.752    0.752 /home/hudson-hornet/Desktop/personal/pef 3/pef/bench/profile_run.py:79(<lambda>)
+       20    0.004    0.000    0.743    0.037 /home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/dijkstra_heap.py:85(dijkstra_heap)
+       20    0.000    0.000    0.001    0.000 /home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/base.py:43(rebuild_path)
+     2867    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       20    0.000    0.000    0.000    0.000 <string>:2(__init__)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+       20    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+       20    0.000    0.000    0.000    0.000 {method 'reverse' of 'list' objects}
+
+

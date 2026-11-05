@@ -1,0 +1,40 @@
+CODE_SMELL    python:S7498           bench/bench_archivos.py:None             [FIXED] Replace this constructor call with a literal.
+CODE_SMELL    python:S1192           bench/bench_archivos.py:None             [FIXED] Define a constant instead of duplicating this literal "o.csv" 5 times.
+CODE_SMELL    python:S7498           bench/bench_archivos.py:None             [FIXED] Replace this constructor call with a literal.
+CODE_SMELL    python:S7498           bench/bench_archivos.py:None             [FIXED] Replace this constructor call with a literal.
+CODE_SMELL    python:S3776           bench/profile_run.py:None                [FIXED] Refactor this function to reduce its Cognitive Complexity from 31 to the 15 allowed.
+CODE_SMELL    python:S3776           bench/run_bench.py:None                  [FIXED] Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.
+CODE_SMELL    python:S5713           data/fetch_cordoba.py:None               [FIXED] Remove this redundant Exception class; it derives from another which is already caught.
+CODE_SMELL    python:S3776           data/fetch_cordoba.py:None               [FIXED] Refactor this function to reduce its Cognitive Complexity from 55 to the 15 allowed.
+CODE_SMELL    python:S7517           data/fetch_cordoba.py:None               [FIXED] Use items to iterate over key-value pairs
+CODE_SMELL    python:S5713           data/fetch_cordoba.py:None               [FIXED] Remove this redundant Exception class; it derives from another which is already caught.
+CODE_SMELL    python:S3776           src/algorithms/dijkstra_naive.py:33      [WONTFIX] Refactor this function to reduce its Cognitive Complexity from 24 to the 15 allowed.  // Baseline deliberadamente ingenuo (parte 1): es la linea base de las mediciones y no se toca.
+VULNERABILITY python:S2245           src/archivos.py:46                       [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/archivos.py:51                       [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+CODE_SMELL    python:S1481           src/cli.py:None                          [FIXED] Replace the unused local variable "out" with "_".
+VULNERABILITY python:S2245           src/graph.py:177                         [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/graph.py:178                         [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/graph.py:203                         [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/graph.py:210                         [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/graph.py:210                         [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/parallel.py:171                      [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/parallel.py:172                      [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/parallel.py:172                      [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/parallel.py:173                      [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+VULNERABILITY python:S2245           src/parallel.py:173                      [FALSE-POSITIVE] Make sure that using this pseudorandom number generator is safe here.  // random con semilla fija para generar grafos y consultas reproducibles. No es un uso criptografico ni de seguridad.
+CODE_SMELL    python:S9073           tests/test_algoritmos.py:None            [FIXED] Split this composite assertion into separate assertions.
+CODE_SMELL    python:S9073           tests/test_algoritmos.py:None            [FIXED] Split this composite assertion into separate assertions.
+CODE_SMELL    python:S9073           tests/test_algoritmos.py:None            [FIXED] Split this composite assertion into separate assertions.
+CODE_SMELL    python:S5778           tests/test_algoritmos.py:None            [FIXED] Refactor this exception test to have only one invocation possibly throwing an exception.
+CODE_SMELL    python:S9073           tests/test_algoritmos.py:None            [FIXED] Split this composite assertion into separate assertions.
+CODE_SMELL    python:S9073           tests/test_archivos.py:None              [FIXED] Split this composite assertion into separate assertions.
+CODE_SMELL    python:S9073           tests/test_archivos.py:None              [FIXED] Split this composite assertion into separate assertions.
+CODE_SMELL    python:S9073           tests/test_grafo.py:None                 [FIXED] Split this composite assertion into separate assertions.
+BUG           python:S5863           tests/test_parallel.py:None              [FIXED] Replace this assertion to not have the same actual and expected expression.
+BUG           Web:InputWithoutLabelCheck viz/index.html:None                      [FIXED] Associate a valid label to this input field.
+CODE_SMELL    javascript:S7721       viz/index.html:None                      [FIXED] Move function 'setCmp' to the outer scope.
+CODE_SMELL    Web:S6853              viz/index.html:None                      [FIXED] A form label must be associated with a control and have accessible text.
+CODE_SMELL    css:S7924              viz/index.html:33                        [WONTFIX] Text does not meet the minimal contrast requirement with its background.  // Visualizador: decision de estilo aceptada, no afecta el analisis de rendimiento.
+CODE_SMELL    javascript:S7785       viz/index.html:608                       [WONTFIX] Prefer top-level await over an async function `cargar` call.  // Visualizador: decision de estilo aceptada, no afecta el analisis de rendimiento.
+CODE_SMELL    python:S1192           viz/server.py:None                       [FIXED] Define a constant instead of duplicating this literal "application/json" 3 times.
+VULNERABILITY python:S5332           viz/server.py:249                        [WONTFIX] Using HTTP protocol is insecure. Use HTTPS instead.  // Servidor de desarrollo que escucha solo en 127.0.0.1; no expone datos sensibles.

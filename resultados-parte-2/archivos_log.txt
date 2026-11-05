@@ -1,0 +1,18 @@
+[1/3] I/O puro
+  io_puro     100000 filas  ingenuo            106.7 ms     19.0 MB
+  io_puro     100000 filas  lotes+buffer        70.6 ms      7.5 MB
+  io_puro     500000 filas  ingenuo            572.7 ms     95.0 MB
+  io_puro     500000 filas  lotes+buffer       331.1 ms      7.5 MB
+  io_puro    1000000 filas  ingenuo           1137.3 ms    190.1 MB
+  io_puro    1000000 filas  lotes+buffer       740.6 ms      7.5 MB
+[2/3] I/O + calculo
+  calculo      50000 filas  ingenuo                  14058.3 ms
+  calculo      50000 filas  lotes+buffer             13703.0 ms
+  calculo      50000 filas  lotes+buffer+procesos     2829.1 ms
+[3/3] Tamano de lote
+  lote      10    22002.7 ms     2.31 MB
+  lote     100     7081.3 ms     2.35 MB
+  lote    1000     2992.9 ms     2.74 MB
+  lote   10000     2831.2 ms     7.45 MB
+  lote   50000     2919.7 ms    18.12 MB
+-> /home/hudson-hornet/Desktop/personal/pef 3/pef/resultados-parte-2/archivos

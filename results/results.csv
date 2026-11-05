@@ -1,0 +1,64 @@
+experiment,family,V,E,variant,queries,ms,ms_per_query,mb,expanded_avg,notes
+algorithms,grid,1024,1984,dijkstra_naive,5,292.588,58.5175,0.069,589.8,
+algorithms,grid,1024,1984,dijkstra_heap,20,11.171,0.5585,0.077,542.5,
+algorithms,grid,1024,1984,astar,20,6.772,0.3386,0.072,185.6,
+algorithms,grid,3969,7812,dijkstra_naive,0,,,,,omitido: trabajo estimado 4.7e+07 operaciones
+algorithms,grid,3969,7812,dijkstra_heap,20,38.734,1.9367,0.29,1719.2,
+algorithms,grid,3969,7812,astar,20,18.539,0.9269,0.271,434.5,
+algorithms,grid,15876,31500,dijkstra_naive,0,,,,,omitido: trabajo estimado 7.5e+08 operaciones
+algorithms,grid,15876,31500,dijkstra_heap,20,236.247,11.8124,1.148,7075.8,
+algorithms,grid,15876,31500,astar,20,100.974,5.0487,1.062,1829.1,
+algorithms,grid,64009,127512,dijkstra_naive,0,,,,,omitido: trabajo estimado 1.2e+10 operaciones
+algorithms,grid,64009,127512,dijkstra_heap,20,965.739,48.287,4.588,28802.0,
+algorithms,grid,64009,127512,astar,20,382.898,19.1449,4.168,7741.0,
+algorithms,highway,1024,2035,dijkstra_naive,5,278.292,55.6584,0.067,508.2,
+algorithms,highway,1024,2035,dijkstra_heap,20,11.468,0.5734,0.079,491.9,
+algorithms,highway,1024,2035,astar,20,6.753,0.3377,0.074,190.8,
+algorithms,highway,3969,8010,dijkstra_naive,0,,,,,omitido: trabajo estimado 4.8e+07 operaciones
+algorithms,highway,3969,8010,dijkstra_heap,20,47.869,2.3935,0.29,1752.5,
+algorithms,highway,3969,8010,astar,20,21.752,1.0876,0.28,518.8,
+algorithms,highway,15876,32293,dijkstra_naive,0,,,,,omitido: trabajo estimado 7.6e+08 operaciones
+algorithms,highway,15876,32293,dijkstra_heap,20,232.311,11.6155,1.178,6637.8,
+algorithms,highway,15876,32293,astar,20,64.294,3.2147,1.108,1285.8,
+algorithms,dense,500,12500,dijkstra_naive,5,695.173,139.0345,0.025,169.2,
+algorithms,dense,500,12500,dijkstra_heap,20,30.998,1.5499,0.088,171.1,
+algorithms,dense,500,12500,astar,20,8.981,0.449,0.069,21.2,
+algorithms,dense,1000,50000,dijkstra_naive,0,,,,,omitido: trabajo estimado 5.1e+07 operaciones
+algorithms,dense,1000,50000,dijkstra_heap,20,257.944,12.8972,0.324,466.1,
+algorithms,dense,1000,50000,astar,20,37.747,1.8874,0.164,35.1,
+algorithms,dense,2000,200000,dijkstra_naive,0,,,,,omitido: trabajo estimado 4.0e+08 operaciones
+algorithms,dense,2000,200000,dijkstra_heap,20,1981.39,99.0695,0.852,1169.9,
+algorithms,dense,2000,200000,astar,20,145.665,7.2832,0.703,62.0,
+algorithms,unweighted,1024,1984,dijkstra_naive,5,336.261,67.2523,0.069,591.6,
+algorithms,unweighted,1024,1984,dijkstra_heap,20,9.929,0.4965,0.076,543.6,
+algorithms,unweighted,1024,1984,astar,20,8.389,0.4195,0.075,312.6,
+algorithms,unweighted,1024,1984,bfs,20,3.888,0.1944,0.044,544.5,
+algorithms,unweighted,3969,7812,dijkstra_naive,0,,,,,omitido: trabajo estimado 4.7e+07 operaciones
+algorithms,unweighted,3969,7812,dijkstra_heap,20,36.509,1.8254,0.293,1716.0,
+algorithms,unweighted,3969,7812,astar,20,26.264,1.3132,0.275,815.7,
+algorithms,unweighted,3969,7812,bfs,20,14.757,0.7379,0.161,1712.8,
+algorithms,unweighted,15876,31500,dijkstra_naive,0,,,,,omitido: trabajo estimado 7.5e+08 operaciones
+algorithms,unweighted,15876,31500,dijkstra_heap,20,260.563,13.0282,1.139,6946.6,
+algorithms,unweighted,15876,31500,astar,20,204.478,10.2239,1.054,3405.7,
+algorithms,unweighted,15876,31500,bfs,20,150.581,7.529,0.617,6938.3,
+cache,grid,15876,31500,sin_cache,200,2734.119,13.6706,1.173,,origenes_calientes
+cache,grid,15876,31500,con_cache,200,114.592,0.573,3.728,,origenes_calientes hit_rate=0.975
+cache,grid,15876,31500,sin_cache,200,2605.724,13.0286,1.174,,origenes_uniformes
+cache,grid,15876,31500,con_cache,200,3599.149,17.9957,42.044,,origenes_uniformes hit_rate=0.005
+parallel,grid,15876,31500,secuencial,10,82.42,8.242,1.088,,speedup=1.00x
+parallel,grid,15876,31500,hilos,10,105.913,10.5913,3.767,,speedup=0.78x
+parallel,grid,15876,31500,procesos,10,158.104,15.8104,0.189,,speedup=0.52x
+parallel,grid,15876,31500,secuencial,50,451.021,9.0204,1.162,,speedup=1.00x
+parallel,grid,15876,31500,hilos,50,635.097,12.7019,8.61,,speedup=0.71x
+parallel,grid,15876,31500,procesos,50,256.699,5.134,0.193,,speedup=1.76x
+parallel,grid,15876,31500,secuencial,200,1987.425,9.9371,1.165,,speedup=1.00x
+parallel,grid,15876,31500,hilos,200,2588.003,12.94,11.222,,speedup=0.77x
+parallel,grid,15876,31500,procesos,200,609.805,3.049,0.192,,speedup=3.26x
+parallel,grid,15876,31500,secuencial,800,8004.701,10.0059,1.219,,speedup=1.00x
+parallel,grid,15876,31500,hilos,800,10226.063,12.7826,12.224,,speedup=0.78x
+parallel,grid,15876,31500,procesos,800,1896.35,2.3704,0.192,,speedup=4.22x
+summary,grid,2500,4900,1_baseline,50,16640.856,332.8171,0.185,,Implementacion inicial; 1.0x vs baseline
+summary,grid,2500,4900,2_estructuras,50,70.535,1.4107,0.241,,Adyacencia + heap + set; 235.9x vs baseline
+summary,grid,2500,4900,3_algoritmo,50,43.026,0.8605,0.243,,A* con heuristica euclidea; 386.8x vs baseline
+summary,grid,2500,4900,4_paralelismo,50,83.491,1.6698,0.238,,ProcessPoolExecutor; 199.3x vs baseline
+summary,grid,2500,4900,5_final,50,12.725,0.2545,0.636,,A* + cache LRU por origen; 1307.8x vs baseline

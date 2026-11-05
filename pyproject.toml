@@ -1,0 +1,31 @@
+[project]
+name = "pef-rutas"
+version = "2.0.0"
+description = "Planificador inteligente de rutas - Programacion Eficiente"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["src"]
+relative_files = true
+
+[tool.ruff]
+line-length = 100
+extend-exclude = [".venv", "docs"]
+
+[tool.ruff.lint]
+# E/W: PEP 8 - F: errores - I: orden de imports - N: nombres - D: docstrings
+# UP: sintaxis moderna - B: bugs comunes - SIM: simplificaciones
+select = ["E", "F", "W", "I", "N", "D", "UP", "B", "SIM"]
+ignore = ["D105", "D107"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+"bench/*" = ["D103"]

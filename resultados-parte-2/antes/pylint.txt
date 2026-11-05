@@ -1,0 +1,126 @@
+************* Module src.graph
+src/graph.py:44:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+************* Module src.cache
+src/cache.py:53:0: W0611: Unused field imported from dataclasses (unused-import)
+************* Module src.cli
+src/cli.py:25:0: C0413: Import "from src.algorithms.astar import astar" should be placed at the top of the module (wrong-import-position)
+src/cli.py:26:0: C0413: Import "from src.algorithms.bfs import bfs" should be placed at the top of the module (wrong-import-position)
+src/cli.py:27:0: C0413: Import "from src.algorithms.dijkstra_heap import dijkstra_heap" should be placed at the top of the module (wrong-import-position)
+src/cli.py:28:0: C0413: Import "from src.algorithms.dijkstra_naive import dijkstra_naive" should be placed at the top of the module (wrong-import-position)
+src/cli.py:29:0: C0413: Import "from src.cache import RouteCache" should be placed at the top of the module (wrong-import-position)
+src/cli.py:30:0: C0413: Import "from src.graph import FAMILIES, generate" should be placed at the top of the module (wrong-import-position)
+src/cli.py:31:0: C0413: Import "from src.parallel import GraphSpec, make_queries, solve_processes, solve_sequential, solve_threads" should be placed at the top of the module (wrong-import-position)
+src/cli.py:113:8: W0612: Unused variable 'out' (unused-variable)
+************* Module src.parallel
+src/parallel.py:87:12: C0415: Import outside toplevel (osm.cargar_cordoba) (import-outside-toplevel)
+src/parallel.py:102:4: W0603: Using the global statement (global-statement)
+src/parallel.py:170:4: C0415: Import outside toplevel (random) (import-outside-toplevel)
+************* Module src.algorithms.dijkstra_heap
+src/algorithms/dijkstra_heap.py:60:0: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module src.algorithms.astar
+src/algorithms/astar.py:48:0: R0914: Too many local variables (17/15) (too-many-locals)
+************* Module src.algorithms.dijkstra_naive
+src/algorithms/dijkstra_naive.py:41:0: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module server
+viz/server.py:36:0: C0413: Import "from src.algorithms.astar import astar" should be placed at the top of the module (wrong-import-position)
+viz/server.py:37:0: C0413: Import "from src.algorithms.dijkstra_heap import dijkstra_heap" should be placed at the top of the module (wrong-import-position)
+viz/server.py:38:0: C0413: Import "from src.algorithms.dijkstra_naive import dijkstra_naive" should be placed at the top of the module (wrong-import-position)
+viz/server.py:39:0: C0413: Import "from src.cache import RouteCache" should be placed at the top of the module (wrong-import-position)
+viz/server.py:40:0: C0413: Import "from src.osm import cargar_cordoba, nodo_mas_cercano" should be placed at the top of the module (wrong-import-position)
+viz/server.py:41:0: C0413: Import "from src.parallel import GraphSpec, make_queries, solve_processes, solve_sequential, solve_threads" should be placed at the top of the module (wrong-import-position)
+viz/server.py:57:4: W0603: Using the global statement (global-statement)
+viz/server.py:90:4: C0103: Method name "do_GET" doesn't conform to snake_case naming style (invalid-name)
+viz/server.py:109:15: W0718: Catching too general exception Exception (broad-exception-caught)
+viz/server.py:90:4: R1710: Either all return statements in a function should return an expression, or none of them should. (inconsistent-return-statements)
+viz/server.py:130:4: R1710: Either all return statements in a function should return an expression, or none of them should. (inconsistent-return-statements)
+viz/server.py:175:4: R1710: Either all return statements in a function should return an expression, or none of them should. (inconsistent-return-statements)
+viz/server.py:40:0: W0611: Unused nodo_mas_cercano imported from src.osm (unused-import)
+************* Module profile_run
+bench/profile_run.py:107:0: C0301: Line too long (105/100) (line-too-long)
+bench/profile_run.py:112:0: C0301: Line too long (104/100) (line-too-long)
+bench/profile_run.py:39:0: C0413: Import "from src.algorithms.astar import astar" should be placed at the top of the module (wrong-import-position)
+bench/profile_run.py:40:0: C0413: Import "from src.algorithms.dijkstra_heap import dijkstra_heap" should be placed at the top of the module (wrong-import-position)
+bench/profile_run.py:41:0: C0413: Import "from src.algorithms.dijkstra_naive import dijkstra_naive" should be placed at the top of the module (wrong-import-position)
+bench/profile_run.py:42:0: C0413: Import "from src.cache import RouteCache" should be placed at the top of the module (wrong-import-position)
+bench/profile_run.py:43:0: C0413: Import "from src.graph import generate" should be placed at the top of the module (wrong-import-position)
+bench/profile_run.py:44:0: C0413: Import "from src.parallel import make_queries" should be placed at the top of the module (wrong-import-position)
+bench/profile_run.py:125:0: R0914: Too many local variables (20/15) (too-many-locals)
+bench/profile_run.py:139:4: C0415: Import outside toplevel (src.algorithms.base.INF) (import-outside-toplevel)
+************* Module run_bench
+bench/run_bench.py:134:0: C0325: Unnecessary parens after '=' keyword (superfluous-parens)
+bench/run_bench.py:261:0: C0301: Line too long (101/100) (line-too-long)
+bench/run_bench.py:267:0: C0325: Unnecessary parens after '=' keyword (superfluous-parens)
+bench/run_bench.py:33:0: C0413: Import "from src.algorithms.astar import astar" should be placed at the top of the module (wrong-import-position)
+bench/run_bench.py:34:0: C0413: Import "from src.algorithms.bfs import bfs" should be placed at the top of the module (wrong-import-position)
+bench/run_bench.py:35:0: C0413: Import "from src.algorithms.dijkstra_heap import dijkstra_heap" should be placed at the top of the module (wrong-import-position)
+bench/run_bench.py:36:0: C0413: Import "from src.algorithms.dijkstra_naive import dijkstra_naive" should be placed at the top of the module (wrong-import-position)
+bench/run_bench.py:37:0: C0413: Import "from src.cache import RouteCache" should be placed at the top of the module (wrong-import-position)
+bench/run_bench.py:38:0: C0413: Import "from src.graph import generate" should be placed at the top of the module (wrong-import-position)
+bench/run_bench.py:39:0: C0413: Import "from src.parallel import GraphSpec, make_queries, solve_processes, solve_sequential, solve_threads" should be placed at the top of the module (wrong-import-position)
+bench/run_bench.py:99:0: R0914: Too many local variables (17/15) (too-many-locals)
+bench/run_bench.py:162:0: R0914: Too many local variables (16/15) (too-many-locals)
+bench/run_bench.py:209:55: W0640: Cell variable queries defined in loop (cell-var-from-loop)
+bench/run_bench.py:210:47: W0640: Cell variable queries defined in loop (cell-var-from-loop)
+bench/run_bench.py:211:55: W0640: Cell variable queries defined in loop (cell-var-from-loop)
+************* Module test_correctness
+tests/test_correctness.py:16:0: C0413: Import "from src.algorithms.astar import astar" should be placed at the top of the module (wrong-import-position)
+tests/test_correctness.py:17:0: C0413: Import "from src.algorithms.base import INF" should be placed at the top of the module (wrong-import-position)
+tests/test_correctness.py:18:0: C0413: Import "from src.algorithms.bfs import bfs" should be placed at the top of the module (wrong-import-position)
+tests/test_correctness.py:19:0: C0413: Import "from src.algorithms.dijkstra_heap import dijkstra_heap, dijkstra_tree" should be placed at the top of the module (wrong-import-position)
+tests/test_correctness.py:20:0: C0413: Import "from src.algorithms.dijkstra_naive import dijkstra_naive" should be placed at the top of the module (wrong-import-position)
+tests/test_correctness.py:21:0: C0413: Import "from src.cache import RouteCache" should be placed at the top of the module (wrong-import-position)
+tests/test_correctness.py:22:0: C0413: Import "from src.graph import FAMILIES, generate" should be placed at the top of the module (wrong-import-position)
+tests/test_correctness.py:23:0: C0413: Import "from tests.reference import bellman_ford, path_cost" should be placed at the top of the module (wrong-import-position)
+tests/test_correctness.py:43:19: W0621: Redefining name 't' from outer scope (line 222) (redefined-outer-name)
+tests/test_correctness.py:56:19: W0621: Redefining name 't' from outer scope (line 222) (redefined-outer-name)
+tests/test_correctness.py:85:12: W0621: Redefining name 't' from outer scope (line 222) (redefined-outer-name)
+tests/test_correctness.py:105:12: W0621: Redefining name 't' from outer scope (line 222) (redefined-outer-name)
+tests/test_correctness.py:118:12: W0621: Redefining name 't' from outer scope (line 222) (redefined-outer-name)
+tests/test_correctness.py:153:8: W0621: Redefining name 't' from outer scope (line 222) (redefined-outer-name)
+tests/test_correctness.py:194:4: C0415: Import outside toplevel (src.osm.cargar_cordoba) (import-outside-toplevel)
+tests/test_correctness.py:202:11: R1716: Simplify chained comparison between the operands: 1000 < g.n < g.num_edges (chained-comparison)
+************* Module reference
+tests/reference.py:1:0: R0801: Similar lines in 2 files
+==src.algorithms.astar:[60:69]
+==src.algorithms.dijkstra_heap:[71:80]
+        if u in visited:
+            continue
+        visited.add(u)
+        expanded += 1
+        if on_expand is not None:
+            on_expand(u)
+        if u == target:
+            break
+        for v, w in adj[u]: (duplicate-code)
+tests/reference.py:1:0: R0801: Similar lines in 2 files
+==profile_run:[159:168]
+==src.algorithms.dijkstra_naive:[65:74]
+            for a, b, w in graph.edges:
+                if a == u:
+                    v = b
+                elif b == u:
+                    v = a
+                else:
+                    continue
+                if not visited[v] and best + w < dist[v]:
+                    dist[v] = best + w (duplicate-code)
+tests/reference.py:1:0: R0801: Similar lines in 2 files
+==src.algorithms.bfs:[55:60]
+==src.algorithms.dijkstra_heap:[74:79]
+        expanded += 1
+        if on_expand is not None:
+            on_expand(u)
+        if u == target:
+            break (duplicate-code)
+tests/reference.py:1:0: R0801: Similar lines in 2 files
+==src.algorithms.astar:[63:68]
+==src.algorithms.dijkstra_naive:[58:65]
+        expanded += 1
+        if on_expand is not None:
+            on_expand(u)
+        if u == target:
+            break (duplicate-code)
+
+-----------------------------------
+Your code has been rated at 9.35/10
+

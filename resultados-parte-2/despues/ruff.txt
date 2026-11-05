@@ -1,0 +1,3 @@
+3	D105	undocumented-magic-method
+1	D107	undocumented-public-init
+Found 4 errors.

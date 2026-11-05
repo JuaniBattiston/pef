@@ -1,0 +1,24 @@
+OPTIMIZADO  astar  (20 consultas, V=64000)
+==========================================
+
+         1314715 function calls in 0.403 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       20    0.183    0.009    0.398    0.020 /home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/astar.py:40(astar)
+   225406    0.059    0.000    0.059    0.000 {built-in method _heapq.heappop}
+   232885    0.052    0.000    0.075    0.000 /home/hudson-hornet/Desktop/personal/pef 3/pef/src/graph.py:97(euclid)
+   232885    0.040    0.000    0.115    0.000 /home/hudson-hornet/Desktop/personal/pef 3/pef/src/graph.py:102(heuristic)
+   232865    0.025    0.000    0.025    0.000 {built-in method _heapq.heappush}
+   232885    0.023    0.000    0.023    0.000 {built-in method math.hypot}
+   154820    0.015    0.000    0.015    0.000 {method 'add' of 'set' objects}
+        1    0.005    0.005    0.403    0.403 /home/hudson-hornet/Desktop/personal/pef 3/pef/bench/profile_run.py:84(<lambda>)
+       20    0.000    0.000    0.001    0.000 /home/hudson-hornet/Desktop/personal/pef 3/pef/src/algorithms/base.py:43(rebuild_path)
+     2867    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       20    0.000    0.000    0.000    0.000 <string>:2(__init__)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+       20    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+       20    0.000    0.000    0.000    0.000 {method 'reverse' of 'list' objects}
+
+

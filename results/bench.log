@@ -1,0 +1,73 @@
+
+[1/4] Algoritmos por familia y tamano
+  grid        V=  1024 E=    1984 dijkstra_naive      58.52 ms/consulta     0.07 MB  exp=    589.8
+  grid        V=  1024 E=    1984 dijkstra_heap        0.56 ms/consulta     0.08 MB  exp=    542.5
+  grid        V=  1024 E=    1984 astar                0.34 ms/consulta     0.07 MB  exp=    185.6
+  grid        V=  3969 dijkstra_naive  OMITIDO (trabajo 4.7e+07)
+  grid        V=  3969 E=    7812 dijkstra_heap        1.94 ms/consulta     0.29 MB  exp=   1719.2
+  grid        V=  3969 E=    7812 astar                0.93 ms/consulta     0.27 MB  exp=    434.5
+  grid        V= 15876 dijkstra_naive  OMITIDO (trabajo 7.5e+08)
+  grid        V= 15876 E=   31500 dijkstra_heap       11.81 ms/consulta     1.15 MB  exp=   7075.8
+  grid        V= 15876 E=   31500 astar                5.05 ms/consulta     1.06 MB  exp=   1829.1
+  grid        V= 64009 dijkstra_naive  OMITIDO (trabajo 1.2e+10)
+  grid        V= 64009 E=  127512 dijkstra_heap       48.29 ms/consulta     4.59 MB  exp=  28802.0
+  grid        V= 64009 E=  127512 astar               19.14 ms/consulta     4.17 MB  exp=   7741.0
+  highway     V=  1024 E=    2035 dijkstra_naive      55.66 ms/consulta     0.07 MB  exp=    508.2
+  highway     V=  1024 E=    2035 dijkstra_heap        0.57 ms/consulta     0.08 MB  exp=    491.9
+  highway     V=  1024 E=    2035 astar                0.34 ms/consulta     0.07 MB  exp=    190.8
+  highway     V=  3969 dijkstra_naive  OMITIDO (trabajo 4.8e+07)
+  highway     V=  3969 E=    8010 dijkstra_heap        2.39 ms/consulta     0.29 MB  exp=   1752.5
+  highway     V=  3969 E=    8010 astar                1.09 ms/consulta     0.28 MB  exp=    518.8
+  highway     V= 15876 dijkstra_naive  OMITIDO (trabajo 7.6e+08)
+  highway     V= 15876 E=   32293 dijkstra_heap       11.62 ms/consulta     1.18 MB  exp=   6637.8
+  highway     V= 15876 E=   32293 astar                3.21 ms/consulta     1.11 MB  exp=   1285.8
+  dense       V=   500 E=   12500 dijkstra_naive     139.03 ms/consulta     0.03 MB  exp=    169.2
+  dense       V=   500 E=   12500 dijkstra_heap        1.55 ms/consulta     0.09 MB  exp=    171.1
+  dense       V=   500 E=   12500 astar                0.45 ms/consulta     0.07 MB  exp=     21.2
+  dense       V=  1000 dijkstra_naive  OMITIDO (trabajo 5.1e+07)
+  dense       V=  1000 E=   50000 dijkstra_heap       12.90 ms/consulta     0.32 MB  exp=    466.1
+  dense       V=  1000 E=   50000 astar                1.89 ms/consulta     0.16 MB  exp=     35.1
+  dense       V=  2000 dijkstra_naive  OMITIDO (trabajo 4.0e+08)
+  dense       V=  2000 E=  200000 dijkstra_heap       99.07 ms/consulta     0.85 MB  exp=   1169.9
+  dense       V=  2000 E=  200000 astar                7.28 ms/consulta     0.70 MB  exp=     62.0
+  unweighted  V=  1024 E=    1984 dijkstra_naive      67.25 ms/consulta     0.07 MB  exp=    591.6
+  unweighted  V=  1024 E=    1984 dijkstra_heap        0.50 ms/consulta     0.08 MB  exp=    543.6
+  unweighted  V=  1024 E=    1984 astar                0.42 ms/consulta     0.07 MB  exp=    312.6
+  unweighted  V=  1024 E=    1984 bfs                  0.19 ms/consulta     0.04 MB  exp=    544.5
+  unweighted  V=  3969 dijkstra_naive  OMITIDO (trabajo 4.7e+07)
+  unweighted  V=  3969 E=    7812 dijkstra_heap        1.83 ms/consulta     0.29 MB  exp=   1716.0
+  unweighted  V=  3969 E=    7812 astar                1.31 ms/consulta     0.27 MB  exp=    815.7
+  unweighted  V=  3969 E=    7812 bfs                  0.74 ms/consulta     0.16 MB  exp=   1712.8
+  unweighted  V= 15876 dijkstra_naive  OMITIDO (trabajo 7.5e+08)
+  unweighted  V= 15876 E=   31500 dijkstra_heap       13.03 ms/consulta     1.14 MB  exp=   6946.6
+  unweighted  V= 15876 E=   31500 astar               10.22 ms/consulta     1.05 MB  exp=   3405.7
+  unweighted  V= 15876 E=   31500 bfs                  7.53 ms/consulta     0.62 MB  exp=   6938.3
+
+[2/4] Cache
+  cache sin_cache  origenes_calientes      2734.12 ms     1.17 MB  origenes_calientes
+  cache con_cache  origenes_calientes       114.59 ms     3.73 MB  origenes_calientes hit_rate=0.975
+  cache sin_cache  origenes_uniformes      2605.72 ms     1.17 MB  origenes_uniformes
+  cache con_cache  origenes_uniformes      3599.15 ms    42.04 MB  origenes_uniformes hit_rate=0.005
+
+[3/4] Concurrencia
+  paralelo lote=  10 secuencial       82.42 ms  speedup=1.00x
+  paralelo lote=  10 hilos           105.91 ms  speedup=0.78x
+  paralelo lote=  10 procesos        158.10 ms  speedup=0.52x
+  paralelo lote=  50 secuencial      451.02 ms  speedup=1.00x
+  paralelo lote=  50 hilos           635.10 ms  speedup=0.71x
+  paralelo lote=  50 procesos        256.70 ms  speedup=1.76x
+  paralelo lote= 200 secuencial     1987.42 ms  speedup=1.00x
+  paralelo lote= 200 hilos          2588.00 ms  speedup=0.77x
+  paralelo lote= 200 procesos        609.80 ms  speedup=3.26x
+  paralelo lote= 800 secuencial     8004.70 ms  speedup=1.00x
+  paralelo lote= 800 hilos         10226.06 ms  speedup=0.78x
+  paralelo lote= 800 procesos       1896.35 ms  speedup=4.22x
+
+[4/4] Tabla comparativa
+  tabla 1_baseline         16640.86 ms     0.19 MB      1.0x
+  tabla 2_estructuras         70.53 ms     0.24 MB    235.9x
+  tabla 3_algoritmo           43.03 ms     0.24 MB    386.8x
+  tabla 4_paralelismo         83.49 ms     0.24 MB    199.3x
+  tabla 5_final               12.72 ms     0.64 MB   1307.8x
+
+63 mediciones -> /home/hudson-hornet/Desktop/personal/pef/results/results.csv

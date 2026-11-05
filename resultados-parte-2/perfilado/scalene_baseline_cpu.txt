@@ -1,0 +1,88 @@
+                   /home/hudson-hornet/Desktop/personal/pef                    
+  3/pef/src/algorithms/dijkstra_naive.py: % of time = 100.00% (4.762s) out of  
+                                    4.762s.                                    
+       ╷        ╷        ╷       ╷                                             
+       │Time    │––––––  │–––––– │                                             
+  Line │Python  │native  │system │/home/hudson-hornet/Desktop/personal/pef 3…  
+╺━━━━━━┿━━━━━━━━┿━━━━━━━━┿━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
+     1 │        │        │       │"""IMPLEMENTACION BASELINE (fila 1 de la ta  
+     2 │        │        │       │                                             
+     3 │        │        │       │Deliberadamente ingenua, pero correcta. Es   
+     4 │        │        │       │miden todas las optimizaciones, asi que no   
+     5 │        │        │       │viven en modulos aparte.                     
+     6 │        │        │       │                                             
+     7 │        │        │       │Dos ineficiencias intencionales, cada una a  
+     8 │        │        │       │posterior distinta:                          
+     9 │        │        │       │                                             
+    10 │        │        │       │  (a) Seleccion del minimo por barrido line  
+    11 │        │        │       │      Se ejecuta V veces y cada una recorre  
+    12 │        │        │       │      Lo ataca el heap binario:  O(log V) p  
+    13 │        │        │       │                                             
+    14 │        │        │       │  (b) Busqueda de vecinos recorriendo la li  
+    15 │        │        │       │      nodo extraido se recorren las E arist  
+    16 │        │        │       │      ->  O(V * E).                          
+    17 │        │        │       │      Lo ataca la lista de adyacencia: O(gr  
+    18 │        │        │       │      los grados es 2E  ->  O(E) en todo el  
+    19 │        │        │       │                                             
+    20 │        │        │       │Complejidad total del baseline:  O(V^2 + V*  
+    21 │        │        │       │En una malla urbana E ~ 2V, con lo cual que  
+    22 │        │        │       │domina en la practica es (b) por la constan  
+    23 │        │        │       │                                             
+    24 │        │        │       │`on_expand`: callback opcional, ver la conv  
+    25 │        │        │       │"""                                          
+    26 │        │        │       │                                             
+    27 │        │        │       │from __future__ import annotations           
+    28 │        │        │       │                                             
+    29 │        │        │       │from ..graph import Graph                    
+    30 │        │        │       │from .base import INF, SearchResult, rebuil  
+    31 │        │        │       │                                             
+    32 │        │        │       │                                             
+    33 │        │        │       │def dijkstra_naive(graph: Graph, source: in  
+    34 │        │        │       │    """Dijkstra baseline: minimo por barrid  
+    35 │        │        │       │    n = graph.n                              
+    36 │        │        │       │    dist = [INF] * n                         
+    37 │        │        │       │    parent = [-1] * n                        
+    38 │        │        │       │    visited = [False] * n                    
+    39 │        │        │       │    dist[source] = 0.0                       
+    40 │        │        │       │    expanded = 0                             
+    41 │        │        │       │                                             
+    42 │        │        │       │    for _ in range(n):                       
+    43 │        │        │       │        # (a) minimo por barrido lineal: O(  
+    44 │        │        │       │        u, best = -1, INF                    
+    45 │        │        │       │        for i in range(n):                   
+    46 │   30%  │        │       │            if not visited[i] and dist[i] <  
+    47 │        │        │       │                u, best = i, dist[i]         
+    48 │        │        │       │        if u == -1:                          
+    49 │        │        │       │            break                            
+    50 │        │        │       │                                             
+    51 │        │        │       │        visited[u] = True                    
+    52 │        │        │       │        expanded += 1                        
+    53 │        │        │       │        if on_expand is not None:            
+    54 │        │        │       │            on_expand(u)                     
+    55 │        │        │       │        if u == target:                      
+    56 │        │        │       │            break                            
+    57 │        │        │       │                                             
+    58 │        │        │       │        # (b) vecinos recorriendo TODAS las  
+    59 │        │        │       │        for a, b, w in graph.edges:          
+    60 │        │        │       │            if a == u:                       
+    61 │        │        │       │                v = b                        
+    62 │        │        │       │            elif b == u:                     
+    63 │        │        │       │                v = a                        
+    64 │        │        │       │            else:                            
+    65 │   70%  │        │       │                continue                     
+    66 │        │        │       │            if not visited[v] and best + w   
+    67 │        │        │       │                dist[v] = best + w           
+    68 │        │        │       │                parent[v] = u                
+    69 │        │        │       │                                             
+    70 │        │        │       │    return SearchResult(                     
+    71 │        │        │       │        cost=dist[target],                   
+    72 │        │        │       │        path=rebuild_path(parent, source, t  
+    73 │        │        │       │        expanded=expanded,                   
+    74 │        │        │       │        algorithm="dijkstra_naive",          
+    75 │        │        │       │    )                                        
+    76 │        │        │       │                                             
+       │        │        │       │                                             
+╶──────┼────────┼────────┼───────┼────────────────────────────────────────────╴
+       │        │        │       │function summary for /home/hudson-hornet/D…  
+    33 │   99%  │        │       │dijkstra_naive                               
+       ╵        ╵        ╵       ╵                                             

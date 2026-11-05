@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html lang="es" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>src.osm &#8212; documentación de Planificador de rutas - 2.0</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=19a2ea7e" />
+    <script src="../../_static/documentation_options.js?v=db497106"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/translations.js?v=f85f4cfb"></script>
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fuente para src.osm</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Carga el mapa real de Cordoba (data/cordoba.json) como un `Graph` normal.</span>
+
+<span class="sd">El punto de este modulo es que el mapa real entra por la MISMA puerta que los</span>
+<span class="sd">grafos sinteticos: devuelve un `Graph` identico en estructura, asi que los</span>
+<span class="sd">cuatro algoritmos, la cache y el paralelismo funcionan sin tocar una linea.</span>
+<span class="sd">Lo unico que cambia es de donde salen los datos.</span>
+
+<span class="sd">Proyeccion</span>
+<span class="sd">    OSM da latitud y longitud (grados sobre una esfera). Los algoritmos</span>
+<span class="sd">    trabajan con coordenadas planas en metros, asi que se proyecta con una</span>
+<span class="sd">    equirectangular centrada en la ciudad:</span>
+
+<span class="sd">        x = R * (lon - lon0) * cos(lat0)</span>
+<span class="sd">        y = R * (lat - lat0)</span>
+
+<span class="sd">    Sobre 8 km de extension el error de esta proyeccion es de centimetros,</span>
+<span class="sd">    despreciable frente a cuadras de 100 metros. Se usa esta y no una</span>
+<span class="sd">    proyeccion mas seria porque es exacta donde importa (distancias locales)</span>
+<span class="sd">    y cuesta dos multiplicaciones.</span>
+
+<span class="sd">Admisibilidad de la heuristica</span>
+<span class="sd">    El peso de cada arista es la longitud real recorrida por la calle, que por</span>
+<span class="sd">    desigualdad triangular es &gt;= la distancia en linea recta entre sus</span>
+<span class="sd">    extremos. Entonces la distancia en linea recta al destino nunca</span>
+<span class="sd">    sobreestima el costo real: A* devuelve el optimo. En el mapa real la</span>
+<span class="sd">    propiedad sale gratis; en los grafos sinteticos habia que forzarla con</span>
+<span class="sd">    el factor &gt;= 1.</span>
+
+<span class="sd">    Hay una sutileza real, detectada por el test de admisibilidad: los pesos</span>
+<span class="sd">    se calcularon con haversine (sobre la esfera) y la heuristica usa la</span>
+<span class="sd">    proyeccion plana. Las dos discrepan en torno al 0,4%, y eso alcanzo para</span>
+<span class="sd">    producir una violacion de 2,7 cm en una cuadra de 10 m. Un margen fijo</span>
+<span class="sd">    "por las dudas" seria una apuesta, asi que en su lugar el margen se</span>
+<span class="sd">    CALCULA de los datos: al cargar se recorre cada arista y se mide cuanto</span>
+<span class="sd">    excede la distancia en linea recta al peso almacenado; el factor de escala</span>
+<span class="sd">    es la inversa del peor caso.</span>
+
+<span class="sd">        escala = 1 / max( euclidea(u,v) / w(u,v) )   sobre todas las aristas</span>
+
+<span class="sd">    Con eso queda garantizado que escala * euclidea(u,v) &lt;= w(u,v) para toda</span>
+<span class="sd">    arista, que es la condicion de CONSISTENCIA. Y una heuristica consistente</span>
+<span class="sd">    es siempre admisible, por desigualdad triangular. La propiedad deja de ser</span>
+<span class="sd">    una esperanza y pasa a ser una consecuencia de los datos, verificada en</span>
+<span class="sd">    O(E) una sola vez al cargar el mapa.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+
+<span class="n">DATOS</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"cordoba.json"</span>
+<span class="n">RADIO_TIERRA</span> <span class="o">=</span> <span class="mf">6371000.0</span>
+
+
+<div class="viewcode-block" id="cargar_cordoba">
+<a class="viewcode-back" href="../../api/nucleo.html#src.osm.cargar_cordoba">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cargar_cordoba</span><span class="p">(</span><span class="n">ruta</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Lee data/cordoba.json y lo devuelve como un `Graph` en metros."""</span>
+    <span class="n">ruta</span> <span class="o">=</span> <span class="n">ruta</span> <span class="ow">or</span> <span class="n">DATOS</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ruta</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"falta </span><span class="si">{</span><span class="n">ruta</span><span class="si">}</span><span class="s2">. Generalo una sola vez con: python3 data/fetch_cordoba.py"</span>
+        <span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ruta</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+
+    <span class="n">lats</span><span class="p">,</span> <span class="n">lons</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">"lat"</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">"lon"</span><span class="p">]</span>
+    <span class="n">lat0</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">lats</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">lats</span><span class="p">)</span>
+    <span class="n">lon0</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">lons</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">lons</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat0</span><span class="p">))</span>
+
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span>
+            <span class="n">RADIO_TIERRA</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lon</span> <span class="o">-</span> <span class="n">lon0</span><span class="p">)</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span>
+            <span class="n">RADIO_TIERRA</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat</span> <span class="o">-</span> <span class="n">lat0</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">lats</span><span class="p">,</span> <span class="n">lons</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"n"</span><span class="p">],</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="s2">"cordoba"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s2">"edges"</span><span class="p">]:</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+    <span class="c1"># Margen calculado: garantiza consistencia y, por lo tanto, admisibilidad.</span>
+    <span class="n">peor</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">peor</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">peor</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">euclid</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">heuristic_scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">peor</span>
+
+    <span class="n">g</span><span class="o">.</span><span class="n">latlon</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">lats</span><span class="p">,</span> <span class="n">lons</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># para dibujar sobre un mapa real</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">ciudad</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">"ciudad"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">g</span></div>
+
+
+
+<div class="viewcode-block" id="nodo_mas_cercano">
+<a class="viewcode-back" href="../../api/nucleo.html#src.osm.nodo_mas_cercano">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">nodo_mas_cercano</span><span class="p">(</span><span class="n">g</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Interseccion mas cercana a un punto del plano. O(V) por barrido lineal.</span>
+
+<span class="sd">    Se hace asi a proposito: se ejecuta una vez por click del usuario, no en</span>
+<span class="sd">    el camino caliente. Optimizarlo con un k-d tree agregaria una estructura</span>
+<span class="sd">    que no aporta al analisis del trabajo. Elegir DONDE no optimizar tambien</span>
+<span class="sd">    es parte de programar eficiente.</span>
+<span class="sd">    """</span>
+    <span class="n">mejor</span><span class="p">,</span> <span class="n">mejor_d</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">cx</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">cy</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">mejor_d</span><span class="p">:</span>
+            <span class="n">mejor</span><span class="p">,</span> <span class="n">mejor_d</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span>
+    <span class="k">return</span> <span class="n">mejor</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Planificador de rutas</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navegación</h3>
+<p class="caption" role="heading"><span class="caption-text">Modulos</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/algoritmos.html">Algoritmos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/nucleo.html">Grafo, cache, paralelismo y archivos</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Código de módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

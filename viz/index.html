@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planificador de rutas — Córdoba</title>
+<style>
+  :root{
+    --fondo:#0e1116; --panel:#161b22; --borde:#262d36;
+    --texto:#e6edf3; --tenue:#8b949e;
+    --calle:#2a323d; --origen:#3fb950; --destino:#f85149;
+    --explorado:#1f6feb; --frontera:#58a6ff; --camino:#f2cc60;
+    --acento:#a371f7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+       background:var(--fondo);color:var(--texto);height:100vh;overflow:hidden}
+  .app{display:grid;grid-template-columns:320px 1fr;height:100vh}
+
+  aside{background:var(--panel);border-right:1px solid var(--borde);
+        padding:18px;overflow-y:auto}
+  h1{font-size:17px;margin:0 0 2px;letter-spacing:-.01em}
+  .sub{color:var(--tenue);font-size:12px;margin:0 0 18px}
+  h2{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--tenue);
+     margin:22px 0 8px;font-weight:600}
+
+  .algos{display:grid;gap:6px}
+  button{font:inherit;color:var(--texto);background:#21262d;border:1px solid var(--borde);
+         border-radius:7px;padding:9px 11px;cursor:pointer;text-align:left;
+         transition:background .12s,border-color .12s}
+  button:hover:not(:disabled){background:#2d333b;border-color:#3d444d}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.on{background:#1f6feb22;border-color:var(--frontera);color:#cae0ff}
+  button .k{display:block;font-size:11px;color:var(--tenue);margin-top:1px}
+  button.on .k{color:#8fb8f0}
+  .fila{display:flex;gap:6px}
+  .fila button{flex:1;text-align:center}
+
+  .stat{display:flex;justify-content:space-between;align-items:baseline;
+        padding:7px 0;border-bottom:1px solid var(--borde)}
+  .stat:last-child{border-bottom:0}
+  .stat .et{color:var(--tenue);font-size:12px}
+  .stat .v{font-variant-numeric:tabular-nums;font-weight:600}
+  .v.grande{font-size:17px}
+
+  .duelo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .duelo .caja{background:#0d1117;border:1px solid var(--borde);border-radius:8px;padding:9px}
+  .duelo .tit{font-size:11px;color:var(--tenue);margin-bottom:5px}
+  .duelo .n{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+  .duelo .u{font-size:11px;color:var(--tenue)}
+  .gana{color:var(--origen)}
+
+  label.rango{display:block;color:var(--tenue);font-size:12px;margin:12px 0 3px}
+  input[type=range]{width:100%;accent-color:var(--frontera)}
+
+  main{position:relative;background:var(--fondo)}
+  canvas{display:block;width:100%;height:100%;cursor:crosshair}
+  .ayuda{position:absolute;left:50%;top:18px;transform:translateX(-50%);
+         background:#161b22ee;border:1px solid var(--borde);border-radius:8px;
+         padding:9px 16px;font-size:13px;pointer-events:none;
+         backdrop-filter:blur(6px);white-space:nowrap}
+  .leyenda{position:absolute;left:16px;bottom:16px;background:#161b22ee;
+           border:1px solid var(--borde);border-radius:8px;padding:11px 14px;
+           font-size:12px;backdrop-filter:blur(6px)}
+  .leyenda div{display:flex;align-items:center;gap:8px;padding:2px 0}
+  .pt{width:11px;height:11px;border-radius:50%;flex:none}
+  .aviso{color:#f0883e;font-size:12px;margin-top:8px;display:none}
+  .tabla{width:100%;border-collapse:collapse;margin-top:8px;font-variant-numeric:tabular-nums}
+  .tabla th{font-size:11px;color:var(--tenue);font-weight:600;text-align:right;padding:4px 0}
+  .tabla th:first-child{text-align:left}
+  .tabla td{text-align:right;padding:5px 0;border-top:1px solid var(--borde);font-weight:600}
+  .tabla td:first-child{text-align:left;color:var(--tenue);font-weight:400}
+  .ok{color:var(--origen)} .mal{color:var(--destino)}
+  .nota{color:var(--tenue);font-size:11.5px;line-height:1.45;margin:9px 0 0}
+  /* ── métricas visuales ──────────────────────────────────── */
+  .m-seccion{font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+             color:var(--tenue);font-weight:600;margin:14px 0 7px}
+  .barra-item{margin:8px 0}
+  .barra-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+  .barra-et{font-size:11.5px;color:var(--tenue)}
+  .barra-val{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+  .barra-track{background:#21262d;border-radius:3px;height:6px;overflow:hidden}
+  .barra-fill{height:100%;border-radius:3px;
+              transition:width .55s cubic-bezier(.4,0,.2,1);min-width:2px}
+  .fill-azul{background:var(--explorado)}
+  .fill-lila{background:var(--acento)}
+  .fill-oro{background:#e3b341}
+  .m-cards2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0 4px}
+  .m-card2{background:#0d1117;border:1px solid var(--borde);border-radius:7px;
+            padding:9px 10px;text-align:center}
+  .mc2-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;
+            color:var(--camino)}
+  .mc2-lbl{font-size:10px;color:var(--tenue);margin-top:2px}
+  /* comparación duelo */
+  .cmp-item{grid-column:1/-1;margin:8px 0 0}
+  .cmp-header{display:flex;justify-content:space-between;font-size:11px;
+               color:var(--tenue);margin-bottom:5px}
+  .cmp-ratio-v{font-weight:600;color:var(--origen)}
+  .cmp-row-bar{display:grid;grid-template-columns:46px 1fr 72px;
+                align-items:center;gap:5px;margin:3px 0}
+  .cmp-tag-d{font-size:10px;color:#58a6ff}
+  .cmp-tag-a{font-size:10px;color:#c49eff}
+  .cmp-track{background:#21262d;border-radius:3px;height:8px;overflow:hidden}
+  .cmp-fill{height:100%;border-radius:3px;transition:width .55s cubic-bezier(.4,0,.2,1)}
+  .cmp-fill-d{background:#1f6feb}
+  .cmp-fill-a{background:#a371f7}
+  .cmp-fill-winner{background:var(--origen)}
+  .cmp-num-d{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;
+              text-align:right;color:#58a6ff}
+  .cmp-num-a{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;
+              text-align:right;color:#c49eff}
+  .cmp-num-winner{color:var(--origen)!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Planificador de rutas</h1>
+    <p class="sub" id="sub">cargando el mapa…</p>
+
+    <h2>Algoritmo</h2>
+    <div class="algos">
+      <button id="b-astar" class="on" data-algo="astar">A* (con brújula)
+        <span class="k">usa la distancia al destino para orientarse</span></button>
+      <button id="b-dijkstra" data-algo="heap">Dijkstra (a ciegas)
+        <span class="k">explora en todas las direcciones por igual</span></button>
+      <button id="b-duelo" data-algo="duelo">Duelo: los dos a la vez
+        <span class="k">misma consulta, exploración lado a lado</span></button>
+    </div>
+
+    <h2>Resultado</h2>
+    <div id="panel">
+      <div class="stat"><span class="et">Distancia</span><span class="v" id="s-costo">—</span></div>
+      <div class="stat"><span class="et">Intersecciones exploradas</span><span class="v" id="s-exp">—</span></div>
+      <div class="stat"><span class="et">Porción del mapa</span><span class="v" id="s-pct">—</span></div>
+      <div class="stat"><span class="et">Tiempo de cálculo</span><span class="v" id="s-ms">—</span></div>
+    </div>
+
+    <div id="panel-detalle" style="display:none">
+      <div class="m-seccion">Exploración del grafo</div>
+      <div class="barra-item">
+        <div class="barra-row">
+          <span class="barra-et">Nodos explorados</span>
+          <span class="barra-val" id="m-exp-v">—</span>
+        </div>
+        <div class="barra-track"><div class="barra-fill fill-azul" id="m-exp-b" style="width:0%"></div></div>
+      </div>
+      <div class="barra-item">
+        <div class="barra-row">
+          <span class="barra-et">Relajaciones de aristas</span>
+          <span class="barra-val" id="m-push-v">—</span>
+        </div>
+        <div class="barra-track"><div class="barra-fill fill-lila" id="m-push-b" style="width:0%"></div></div>
+      </div>
+      <div class="barra-item">
+        <div class="barra-row">
+          <span class="barra-et">Pico del heap</span>
+          <span class="barra-val" id="m-heap-v">—</span>
+        </div>
+        <div class="barra-track"><div class="barra-fill fill-oro" id="m-heap-b" style="width:0%"></div></div>
+      </div>
+      <div class="m-seccion">Ruta encontrada</div>
+      <div class="m-cards2">
+        <div class="m-card2">
+          <div class="mc2-val" id="m-pn">—</div>
+          <div class="mc2-lbl">nodos en ruta</div>
+        </div>
+        <div class="m-card2">
+          <div class="mc2-val" id="m-pe">—</div>
+          <div class="mc2-lbl">aristas en ruta</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="duelo" id="d-duelo" style="display:none">
+      <div class="caja"><div class="tit">Dijkstra</div>
+        <div class="n" id="d-dij">—</div><div class="u">exploradas</div></div>
+      <div class="caja"><div class="tit">A*</div>
+        <div class="n" id="d-ast">—</div><div class="u">exploradas</div></div>
+      <div class="cmp-item">
+        <div class="cmp-header"><span>Nodos explorados</span><span class="cmp-ratio-v" id="r-exp">—</span></div>
+        <div class="cmp-row-bar">
+          <span class="cmp-tag-d">Dijkstra</span>
+          <div class="cmp-track"><div class="cmp-fill cmp-fill-d" id="b-d-exp" style="width:100%"></div></div>
+          <span class="cmp-num-d" id="v-d-exp">—</span>
+        </div>
+        <div class="cmp-row-bar">
+          <span class="cmp-tag-a">A*</span>
+          <div class="cmp-track"><div class="cmp-fill cmp-fill-a" id="b-a-exp" style="width:100%"></div></div>
+          <span class="cmp-num-a" id="v-a-exp">—</span>
+        </div>
+      </div>
+      <div class="cmp-item">
+        <div class="cmp-header"><span>Tiempo de cálculo</span><span class="cmp-ratio-v" id="r-ms">—</span></div>
+        <div class="cmp-row-bar">
+          <span class="cmp-tag-d">Dijkstra</span>
+          <div class="cmp-track"><div class="cmp-fill cmp-fill-d" id="b-d-ms" style="width:100%"></div></div>
+          <span class="cmp-num-d" id="v-d-ms">—</span>
+        </div>
+        <div class="cmp-row-bar">
+          <span class="cmp-tag-a">A*</span>
+          <div class="cmp-track"><div class="cmp-fill cmp-fill-a" id="b-a-ms" style="width:100%"></div></div>
+          <span class="cmp-num-a" id="v-a-ms">—</span>
+        </div>
+      </div>
+      <div class="cmp-item">
+        <div class="cmp-header"><span>Relajaciones de aristas</span><span class="cmp-ratio-v" id="r-push">—</span></div>
+        <div class="cmp-row-bar">
+          <span class="cmp-tag-d">Dijkstra</span>
+          <div class="cmp-track"><div class="cmp-fill cmp-fill-d" id="b-d-push" style="width:100%"></div></div>
+          <span class="cmp-num-d" id="v-d-push">—</span>
+        </div>
+        <div class="cmp-row-bar">
+          <span class="cmp-tag-a">A*</span>
+          <div class="cmp-track"><div class="cmp-fill cmp-fill-a" id="b-a-push" style="width:100%"></div></div>
+          <span class="cmp-num-a" id="v-a-push">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="aviso" id="aviso"></div>
+
+    <h2>Animación</h2>
+    <label class="rango" for="vel">Velocidad <span id="vel-txt">×8</span></label>
+    <input type="range" id="vel" min="1" max="60" value="8">
+    <div class="fila" style="margin-top:8px">
+      <button id="b-repetir">Repetir</button>
+      <button id="b-saltar">Ver final</button>
+    </div>
+
+    <h2>Caché y cambios en el mapa</h2>
+    <div class="algos">
+      <button id="b-cache">Repetir usando la caché
+        <span class="k" id="k-cache">reutiliza el árbol ya calculado</span></button>
+      <button id="b-cortar">Cortar una calle de la ruta
+        <span class="k">sube la versión del mapa → invalida la caché</span></button>
+      <button id="b-reset">Restaurar el mapa
+        <span class="k" id="k-reset">versión 0 · 0 calles cortadas</span></button>
+    </div>
+
+    <h2>Paralelismo</h2>
+    <div class="algos">
+      <button id="b-lote">Barrido de lotes: 50 · 200 · 800
+        <span class="k">secuencial vs hilos vs procesos</span></button>
+    </div>
+    <div id="res-lote"></div>
+  </aside>
+
+  <main>
+    <canvas id="c"></canvas>
+    <div class="ayuda" id="ayuda">Hacé clic para elegir el <b>origen</b></div>
+    <div class="leyenda">
+      <div><span class="pt" style="background:var(--origen)"></span>origen</div>
+      <div><span class="pt" style="background:var(--destino)"></span>destino</div>
+      <div><span class="pt" style="background:var(--explorado)"></span>explorado</div>
+      <div><span class="pt" style="background:var(--camino)"></span>ruta óptima</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const cv = $('#c'), cx = cv.getContext('2d');
+
+let mapa = null, T = {e:1, dx:0, dy:0};   // transformación mundo → pantalla
+let origen = null, destino = null;
+let algo = 'astar';
+let anim = null;                           // animación en curso
+let ultima = null;                         // última respuesta del servidor
+
+// ---------- carga ----------
+async function cargar(){
+  const r = await fetch('/api/mapa');
+  mapa = await r.json();
+  $('#sub').innerHTML = `${mapa.ciudad} · <b>${mapa.n.toLocaleString('es')}</b> esquinas · <b>${mapa.edges.length.toLocaleString('es')}</b> cuadras`;
+  ajustar();
+  dibujar();
+}
+
+function ajustar(){
+  const r = cv.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  cv.width = r.width*dpr; cv.height = r.height*dpr;
+  cx.setTransform(dpr,0,0,dpr,0,0);
+  if(!mapa) return;
+  const xs=mapa.x, ys=mapa.y;
+  const x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
+  const m = 24;
+  T.e = Math.min((r.width-2*m)/(x1-x0), (r.height-2*m)/(y1-y0));
+  T.dx = m - x0*T.e + (r.width-2*m-(x1-x0)*T.e)/2;
+  T.dy = r.height - m + y0*T.e - (r.height-2*m-(y1-y0)*T.e)/2;
+}
+const PX = i => mapa.x[i]*T.e + T.dx;
+const PY = i => T.dy - mapa.y[i]*T.e;
+
+// ---------- dibujo ----------
+function calles(){
+  cx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--calle');
+  cx.lineWidth = 1; cx.beginPath();
+  for(const [u,v] of mapa.edges){ cx.moveTo(PX(u),PY(u)); cx.lineTo(PX(v),PY(v)); }
+  cx.stroke();
+}
+function punto(i, color, r=6){
+  cx.fillStyle = color; cx.beginPath(); cx.arc(PX(i),PY(i),r,0,7); cx.fill();
+  cx.strokeStyle = '#0e1116'; cx.lineWidth = 2; cx.stroke();
+}
+function extremos(){
+  if(origen!==null) punto(origen, getComputedStyle(document.body).getPropertyValue('--origen'));
+  if(destino!==null) punto(destino, getComputedStyle(document.body).getPropertyValue('--destino'));
+}
+function dibujar(){
+  const r = cv.getBoundingClientRect();
+  cx.fillStyle = getComputedStyle(document.body).getPropertyValue('--fondo');
+  cx.fillRect(0,0,r.width,r.height);
+  if(!mapa) return;
+  calles(); extremos();
+}
+
+// Pinta las intersecciones exploradas hasta el paso k, con un degradé por
+// antigüedad: se ve el frente de búsqueda avanzando.
+function explorados(orden, k, tono){
+  for(let i=0;i<k;i++){
+    const t = i/Math.max(1,k);
+    cx.fillStyle = `hsla(${tono}, ${55+t*35}%, ${34+t*26}%, ${.35+t*.5})`;
+    cx.fillRect(PX(orden[i])-1.6, PY(orden[i])-1.6, 3.2, 3.2);
+  }
+}
+function camino(path, color, ancho=3.4){
+  if(!path || path.length<2) return;
+  cx.strokeStyle = color; cx.lineWidth = ancho;
+  cx.lineJoin = cx.lineCap = 'round';
+  cx.beginPath(); cx.moveTo(PX(path[0]),PY(path[0]));
+  for(let i=1;i<path.length;i++) cx.lineTo(PX(path[i]),PY(path[i]));
+  cx.stroke();
+}
+
+// ---------- sonidos ----------
+let _actx = null;
+function actx() {
+  if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+  return _actx;
+}
+function beep(hz, t0, dur, vol=0.28, tipo='sine') {
+  const ctx = actx(), osc = ctx.createOscillator(), g = ctx.createGain();
+  osc.connect(g); g.connect(ctx.destination);
+  osc.type = tipo;
+  osc.frequency.setValueAtTime(hz, ctx.currentTime + t0);
+  g.gain.setValueAtTime(vol, ctx.currentTime + t0);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t0 + dur);
+  osc.start(ctx.currentTime + t0);
+  osc.stop(ctx.currentTime + t0 + dur + 0.05);
+}
+
+// Oscilador continuo sincronizado con la animación (estilo sorting visualizer)
+let _oscBusqueda = null, _gainBusqueda = null;
+function iniciarBusqueda() {
+  pararBusqueda();
+  const ctx = actx();
+  _gainBusqueda = ctx.createGain();
+  _gainBusqueda.gain.setValueAtTime(0.001, ctx.currentTime);
+  _gainBusqueda.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.04);
+  _gainBusqueda.connect(ctx.destination);
+  _oscBusqueda = ctx.createOscillator();
+  _oscBusqueda.type = 'sine';
+  _oscBusqueda.frequency.setValueAtTime(140, ctx.currentTime);
+  _oscBusqueda.connect(_gainBusqueda);
+  _oscBusqueda.start();
+}
+function actualizarFrecuencia(progreso) {
+  if (!_oscBusqueda) return;
+  // 140 Hz → 1400 Hz en escala exponencial, igual que sorting visualizers
+  const hz = 140 * Math.pow(10, progreso);
+  _oscBusqueda.frequency.setTargetAtTime(hz, actx().currentTime, 0.012);
+}
+function pararBusqueda() {
+  if (_gainBusqueda) {
+    try {
+      _gainBusqueda.gain.setTargetAtTime(0.001, actx().currentTime, 0.02);
+    } catch(e) {}
+  }
+  if (_oscBusqueda) { try { _oscBusqueda.stop(actx().currentTime + 0.06); } catch(e){} }
+  _oscBusqueda = null; _gainBusqueda = null;
+}
+
+// Acorde arpeggiado cuando se encuentra la ruta
+function sonarRutaEncontrada() {
+  pararBusqueda();
+}
+function sonarCache() {
+  beep(1500, 0, 0.07, 0.18); beep(2100, 0.09, 0.12, 0.18);
+}
+function sonarRecalcular() {
+  pararBusqueda();
+  [440, 349, 262].forEach((hz, i) => beep(hz, i * 0.19, 0.16, 0.3));
+}
+
+// ---------- animación ----------
+function animar(trazas, alFinal){
+  if(anim) cancelAnimationFrame(anim);
+  const total = Math.max(...trazas.map(t=>t.orden.length));
+  let k = 0;
+  iniciarBusqueda();
+  const paso = () => {
+    const v = +$('#vel').value;
+    k = Math.min(total, k + Math.max(1, Math.ceil(total/(220/v))));
+    actualizarFrecuencia(k / total);
+    dibujar();
+    for(const t of trazas) explorados(t.orden, Math.min(k,t.orden.length), t.tono);
+    if(k>=total){
+      for(const t of trazas) camino(t.camino, t.color, trazas.length>1?2.6:3.4);
+      extremos(); alFinal && alFinal();
+      anim = null; return;
+    }
+    extremos();
+    anim = requestAnimationFrame(paso);
+  };
+  paso();
+}
+
+// ---------- interacción ----------
+function cercano(px,py){
+  let mejor=0, md=Infinity;
+  for(let i=0;i<mapa.n;i++){
+    const d=(PX(i)-px)**2+(PY(i)-py)**2;
+    if(d<md){md=d;mejor=i;}
+  }
+  return mejor;
+}
+
+cv.addEventListener('click', e=>{
+  if(!mapa) return;
+  const r = cv.getBoundingClientRect();
+  const i = cercano(e.clientX-r.left, e.clientY-r.top);
+  if(origen===null || destino!==null){ origen=i; destino=null; limpiar();
+    $('#ayuda').innerHTML='Ahora elegí el <b>destino</b>'; }
+  else { destino=i; $('#ayuda').innerHTML='Calculando…'; resolver(); }
+  dibujar();
+});
+
+function limpiar(){
+  ultima=null;
+  for(const id of ['#s-costo','#s-exp','#s-pct','#s-ms']) $(id).textContent='—';
+  $('#d-dij').textContent='—'; $('#d-ast').textContent='—';
+  $('#aviso').style.display='none'; $('#res-lote').innerHTML='';
+  $('#panel-detalle').style.display='none';
+}
+
+async function pedir(a){
+  const r = await fetch(`/api/ruta?algo=${a}&desde=${origen}&hasta=${destino}`);
+  return r.json();
+}
+
+async function resolver(){
+  if(origen===null||destino===null) return;
+  const est = getComputedStyle(document.body);
+  if(algo==='duelo'){
+    $('#panel').style.display='none'; $('#d-duelo').style.display='grid';
+    const [d,a] = await Promise.all([pedir('heap'), pedir('astar')]);
+    ultima = {duelo:[d,a]};
+    mostrarMetricas(null);
+    mostrarComparacion(d, a);
+    $('#d-dij').textContent = d.expandidos.toLocaleString('es');
+    $('#d-ast').textContent = a.expandidos.toLocaleString('es');
+    $('#d-ast').className = 'n gana';
+    $('#ayuda').innerHTML = `A* exploró <b>${(d.expandidos/a.expandidos).toFixed(1)}×</b> menos esquinas — misma ruta de <b>${(d.costo/1000).toFixed(2)} km</b>`;
+    animar([
+      {orden:d.orden, camino:d.camino, tono:212, color:'#58a6ff'},
+      {orden:a.orden, camino:a.camino, tono:280, color:est.getPropertyValue('--camino')},
+    ], sonarRutaEncontrada);
+  } else {
+    $('#panel').style.display='block'; $('#d-duelo').style.display='none';
+    const res = await pedir(algo);
+    if(res.error){ $('#aviso').textContent=res.error; $('#aviso').style.display='block';
+      $('#ayuda').textContent='Elegí otro algoritmo'; return; }
+    ultima = {simple:res};
+    mostrarMetricas(res);
+    $('#s-costo').textContent = (res.costo/1000).toFixed(2)+' km';
+    $('#s-exp').textContent = res.expandidos.toLocaleString('es');
+    $('#s-pct').textContent = res.porcentaje+'%';
+    $('#s-ms').textContent = res.ms.toFixed(1)+' ms';
+    $('#ayuda').innerHTML = `${res.camino.length} esquinas de ruta · exploró el <b>${res.porcentaje}%</b> del mapa`;
+    animar([{orden:res.orden, camino:res.camino, tono:212,
+             color:est.getPropertyValue('--camino')}], sonarRutaEncontrada);
+  }
+}
+
+// ---------- métricas visuales ----------
+function mostrarMetricas(res) {
+  const det = $('#panel-detalle');
+  if (!res || !res.expandidos) { det.style.display = 'none'; return; }
+  det.style.display = 'block';
+  const pctExp = res.porcentaje || 0;
+  const pctPush = Math.min(100, ((res.pushes || 0) / Math.max(1, mapa.edges.length)) * 100);
+  const pctHeap = Math.min(100, ((res.heap_peak || 0) / Math.max(1, mapa.n)) * 100);
+  $('#m-exp-v').textContent = (res.expandidos || 0).toLocaleString('es') + ' (' + pctExp + '%)';
+  $('#m-exp-b').style.width = pctExp + '%';
+  $('#m-push-v').textContent = (res.pushes || 0).toLocaleString('es');
+  $('#m-push-b').style.width = pctPush.toFixed(1) + '%';
+  $('#m-heap-v').textContent = (res.heap_peak || 0).toLocaleString('es');
+  $('#m-heap-b').style.width = pctHeap.toFixed(1) + '%';
+  $('#m-pn').textContent = (res.path_nodes || 0).toLocaleString('es');
+  $('#m-pe').textContent = (res.path_edges || 0).toLocaleString('es');
+}
+
+function setCmp(metric, vD, vA, fmt, ratioTxt) {
+  const maxV = Math.max(vD, vA, 1);
+  const ratio = (vD / Math.max(vA, 0.001)).toFixed(1);
+  $('#r-' + metric).textContent = ratioTxt.replace('{r}', ratio);
+  const winA = vA <= vD;
+  [['d', vD], ['a', vA]].forEach(([w, v]) => {
+    const isWin = (w === 'a') === winA;
+    const bar = $('#b-' + w + '-' + metric);
+    const num = $('#v-' + w + '-' + metric);
+    bar.style.width = (v / maxV * 100) + '%';
+    bar.className = 'cmp-fill ' + (isWin ? 'cmp-fill-winner' : 'cmp-fill-' + w);
+    num.textContent = fmt(v);
+    num.className = 'cmp-num-' + w + (isWin ? ' cmp-num-winner' : '');
+  });
+}
+
+function mostrarComparacion(d, a) {
+  setCmp('exp',  d.expandidos, a.expandidos, v => v.toLocaleString('es'),      'A* exploró {r}× menos');
+  setCmp('ms',   d.ms,         a.ms,         v => v.toFixed(1) + ' ms',        'A* fue {r}× más rápido');
+  setCmp('push', d.pushes||0,  a.pushes||0,  v => v.toLocaleString('es'),      'A* relajó {r}× menos');
+}
+
+// ---------- botones ----------
+document.querySelectorAll('[data-algo]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-algo]').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); algo=b.dataset.algo; limpiar(); resolver();
+  });
+});
+$('#vel').addEventListener('input', e=> $('#vel-txt').textContent='×'+e.target.value);
+$('#b-repetir').addEventListener('click', resolver);
+$('#b-saltar').addEventListener('click', ()=>{
+  if(!ultima) return;
+  if(anim){ cancelAnimationFrame(anim); anim=null; }
+  pararBusqueda();
+  const est=getComputedStyle(document.body);
+  dibujar();
+  const ts = ultima.duelo
+    ? [{orden:ultima.duelo[0].orden,camino:ultima.duelo[0].camino,tono:212,color:'#58a6ff'},
+       {orden:ultima.duelo[1].orden,camino:ultima.duelo[1].camino,tono:280,color:est.getPropertyValue('--camino')}]
+    : [{orden:ultima.simple.orden,camino:ultima.simple.camino,tono:212,color:est.getPropertyValue('--camino')}];
+  for(const t of ts) explorados(t.orden, t.orden.length, t.tono);
+  for(const t of ts) camino(t.camino, t.color, ts.length>1?2.6:3.4);
+  extremos();
+});
+
+$('#b-cache').addEventListener('click', async ()=>{
+  if(origen===null||destino===null) return;
+  const r = await fetch(`/api/ruta?algo=astar&desde=${origen}&hasta=${destino}&cache=1`);
+  const res = await r.json();
+  const st = res.stats_cache;
+  $('#k-cache').textContent =
+    `${res.cache==='hit'?'ACIERTO':'fallo'} · ${res.ms.toFixed(3)} ms · aciertos ${st.hits}/${st.hits+st.misses}`;
+  $('#panel').style.display='block'; $('#d-duelo').style.display='none';
+  $('#s-costo').textContent=(res.costo/1000).toFixed(2)+' km';
+  $('#s-exp').textContent = res.cache==='hit' ? '0 (reutilizada)' : res.expandidos.toLocaleString('es');
+  $('#s-pct').textContent = res.cache==='hit' ? '—' : '';
+  $('#s-ms').textContent=res.ms.toFixed(3)+' ms';
+  dibujar(); camino(res.camino, getComputedStyle(document.body).getPropertyValue('--camino')); extremos();
+  if (res.cache === 'hit') sonarCache(); else sonarRuta();
+  $('#ayuda').innerHTML = res.cache==='hit'
+    ? 'Ruta <b>reutilizada</b> de la caché, sin recalcular nada'
+    : 'Primera vez: se calculó y se guardó el árbol completo';
+});
+
+$('#b-cortar').addEventListener('click', async ()=>{
+  const path = ultima?.simple?.camino || ultima?.duelo?.[1]?.camino;
+  if(!path || path.length<3){ $('#ayuda').textContent='Calculá una ruta primero'; return; }
+  const m = Math.floor(path.length/2);
+  const r = await fetch(`/api/cortar?u=${path[m]}&v=${path[m+1]}`);
+  const res = await r.json();
+  sonarRecalcular();
+  $('#k-reset').textContent = `versión ${res.version} · ${res.cortadas} calle(s) cortada(s)`;
+  $('#ayuda').innerHTML = `Calle cortada · mapa en <b>versión ${res.version}</b> → la caché quedó invalidada`;
+  resolver();
+});
+
+$('#b-reset').addEventListener('click', async ()=>{
+  const r = await fetch('/api/reset'); const res = await r.json();
+  $('#k-reset').textContent = `versión ${res.version} · 0 calles cortadas`;
+  $('#k-cache').textContent = 'reutiliza el árbol ya calculado';
+  $('#ayuda').textContent='Mapa restaurado'; resolver();
+});
+
+$('#b-lote').addEventListener('click', async e=>{
+  const b=e.currentTarget; b.disabled=true;
+  $('#res-lote').innerHTML='<p class="sub" style="margin:10px 0 0">midiendo 1.050 rutas…</p>';
+  const r = await fetch('/api/lote?algo=astar'); const res = await r.json();
+  let h = '<table class="tabla"><tr><th>lote</th><th>hilos</th><th>procesos</th></tr>';
+  for(const f of res.filas){
+    const sh=f.speedup.hilos, sp=f.speedup.procesos;
+    h += `<tr><td>${f.n}</td>`
+      +  `<td class="${sh>1?'ok':'mal'}">${sh}×</td>`
+      +  `<td class="${sp>1?'ok':'mal'}">${sp}×</td></tr>`;
+  }
+  h += '</table>';
+  h += res.cruce
+    ? `<p class="nota">Los procesos empiezan a convenir a partir de las <b>${res.cruce}</b> rutas. Por debajo, arrancarlos cuesta más de lo que ahorran.</p>`
+    : '<p class="nota">En este mapa A* es tan rápido que ni con 800 rutas se amortiza el arranque de procesos.</p>';
+  h += '<p class="nota">Los hilos pierden en <b>todos</b> los tamaños: es el GIL, y no se arregla agrandando el lote.</p>';
+  $('#res-lote').innerHTML = h;
+  b.disabled=false;
+});
+
+addEventListener('resize', ()=>{ ajustar(); dibujar(); });
+cargar();
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+************* Module src.cli
+src/cli.py:115:8: W0612: Unused variable 'out' (unused-variable)
+************* Module src.graph
+src/graph.py:43:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+************* Module src.archivos
+src/archivos.py:52:9: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+src/archivos.py:60:9: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+src/archivos.py:62:8: R1708: Do not raise StopIteration in generator, use return statement instead (stop-iteration-return)
+src/archivos.py:69:13: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+src/archivos.py:72:9: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+src/archivos.py:80:9: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+src/archivos.py:91:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/archivos.py:91:0: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+************* Module src.parallel
+src/parallel.py:78:12: C0415: Import outside toplevel (osm.cargar_cordoba) (import-outside-toplevel)
+src/parallel.py:93:4: W0603: Using the global statement (global-statement)
+************* Module src.algorithms.dijkstra_heap
+src/algorithms/dijkstra_heap.py:52:0: R0914: Too many local variables (17/15) (too-many-locals)
+************* Module src.algorithms.astar
+src/algorithms/astar.py:40:0: R0914: Too many local variables (17/15) (too-many-locals)
+************* Module src.algorithms.dijkstra_naive
+src/algorithms/dijkstra_naive.py:33:0: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module server
+viz/server.py:46:4: W0603: Using the global statement (global-statement)
+viz/server.py:57:8: W0107: Unnecessary pass statement (unnecessary-pass)
+viz/server.py:81:4: C0103: Method name "do_GET" doesn't conform to snake_case naming style (invalid-name)
+viz/server.py:101:15: W0718: Catching too general exception Exception (broad-exception-caught)
+viz/server.py:81:4: R1710: Either all return statements in a function should return an expression, or none of them should. (inconsistent-return-statements)
+viz/server.py:124:4: R1710: Either all return statements in a function should return an expression, or none of them should. (inconsistent-return-statements)
+viz/server.py:176:4: R1710: Either all return statements in a function should return an expression, or none of them should. (inconsistent-return-statements)
+************* Module profile_run
+bench/profile_run.py:128:0: R0914: Too many local variables (20/15) (too-many-locals)
+bench/profile_run.py:143:4: C0415: Import outside toplevel (src.algorithms.base.INF) (import-outside-toplevel)
+************* Module run_bench
+bench/run_bench.py:138:0: C0325: Unnecessary parens after '=' keyword (superfluous-parens)
+bench/run_bench.py:275:0: C0325: Unnecessary parens after '=' keyword (superfluous-parens)
+bench/run_bench.py:96:0: R0914: Too many local variables (17/15) (too-many-locals)
+bench/run_bench.py:166:0: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module bench_archivos
+bench/bench_archivos.py:63:24: R1735: Consider using '{"exp": 'io_puro', "variante": nombre, "filas": filas, "ms": ms, "mb": mb, ... }' instead of a call to 'dict'. (use-dict-literal)
+bench/bench_archivos.py:87:24: R1735: Consider using '{"exp": 'con_calculo', "variante": nombre, "filas": filas, "ms": ms, ... }' instead of a call to 'dict'. (use-dict-literal)
+bench/bench_archivos.py:109:24: R1735: Consider using '{"exp": 'tamano_lote', "variante": f'lote={lote}', "filas": filas}' instead of a call to 'dict'. (use-dict-literal)
+bench/bench_archivos.py:142:9: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+************* Module test_algoritmos
+tests/test_algoritmos.py:81:4: C0415: Import outside toplevel (src.osm.cargar_cordoba, src.osm.nodo_mas_cercano) (import-outside-toplevel)
+************* Module test_archivos
+tests/test_archivos.py:27:9: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+tests/test_archivos.py:31:41: W0621: Redefining name 'consultas' from outer scope (line 20) (redefined-outer-name)
+tests/test_archivos.py:38:30: W0621: Redefining name 'consultas' from outer scope (line 20) (redefined-outer-name)
+tests/test_archivos.py:49:36: W0621: Redefining name 'consultas' from outer scope (line 20) (redefined-outer-name)
+************* Module test_cli
+tests/test_cli.py:26:46: W0613: Unused argument 'capsys' (unused-argument)
+************* Module reference
+tests/reference.py:1:0: R0801: Similar lines in 2 files
+==src.algorithms.astar:[53:62]
+==src.algorithms.dijkstra_heap:[64:73]
+        if u in visited:
+            continue  # entrada obsoleta del borrado perezoso
+        visited.add(u)
+        expanded += 1
+        if on_expand is not None:
+            on_expand(u)
+        if u == target:
+            break
+        for v, w in adj[u]: (duplicate-code)
+tests/reference.py:1:0: R0801: Similar lines in 2 files
+==profile_run:[163:172]
+==src.algorithms.dijkstra_naive:[58:67]
+            for a, b, w in graph.edges:
+                if a == u:
+                    v = b
+                elif b == u:
+                    v = a
+                else:
+                    continue
+                if not visited[v] and best + w < dist[v]:
+                    dist[v] = best + w (duplicate-code)
+tests/reference.py:1:0: R0801: Similar lines in 2 files
+==src.algorithms.bfs:[48:53]
+==src.algorithms.dijkstra_heap:[67:72]
+        expanded += 1
+        if on_expand is not None:
+            on_expand(u)
+        if u == target:
+            break (duplicate-code)
+tests/reference.py:1:0: R0801: Similar lines in 2 files
+==src.algorithms.astar:[56:61]
+==src.algorithms.dijkstra_naive:[51:58]
+        expanded += 1
+        if on_expand is not None:
+            on_expand(u)
+        if u == target:
+            break
+
+        # (b) vecinos recorriendo TODAS las aristas: O(E) (duplicate-code)
+
+------------------------------------------------------------------
+Your code has been rated at 9.69/10 (previous run: 9.35/10, +0.34)
+
