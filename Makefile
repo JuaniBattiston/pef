@@ -91,12 +91,16 @@ sec-code: | $(REPORTS) ## Bandit: reportes completos + bloqueo por severidad
 	$(PY) -m bandit -q -r src viz bench data -f txt -o $(REPORTS)/bandit_nosec.txt --ignore-nosec --exit-zero
 	$(PY) -m bandit -q -r src viz bench data --severity-level $(BANDIT_SEV) --confidence-level $(BANDIT_CONF)
 
-secrets: | $(REPORTS) ## Gitleaks sobre todo el historial de git
+secrets: | $(REPORTS) ## Gitleaks sobre todo el historial que llega al commit actual
+	@# --log-opts HEAD: se escanea el historial del commit que se integra, no las demas
+	@# ramas del repo (con --all, un secreto en una rama ajena rechazaria cualquier PR).
 	@if command -v gitleaks >/dev/null; then \
-	  gitleaks git . --no-banner --redact -v --report-format sarif --report-path $(REPORTS)/gitleaks.sarif; \
+	  gitleaks git . --no-banner --redact -v --log-opts="--full-history HEAD" \
+	    --report-format sarif --report-path $(REPORTS)/gitleaks.sarif; \
 	else \
 	  $(CONTAINER) run --rm -v "$$PWD":/repo:Z -w /repo $(GITLEAKS_IMAGE) \
-	    git /repo --no-banner --redact -v --report-format sarif --report-path /repo/$(REPORTS)/gitleaks.sarif; \
+	    git /repo --no-banner --redact -v --log-opts="--full-history HEAD" \
+	    --report-format sarif --report-path /repo/$(REPORTS)/gitleaks.sarif; \
 	fi
 
 # --- etapa 4: pruebas y cobertura ----------------------------------------------

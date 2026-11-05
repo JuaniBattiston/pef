@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | Dependencia con vulnerabilidad conocida | FastAPI, Uvicorn y sus dependencias | ejecución remota o denegación de servicio en el visualizador | versiones fijadas con hashes; `pip-audit` en cada cambio; Dependabot |
 | Paquete alterado en el registro (cadena de suministro) | instalación de dependencias | código malicioso en el entorno | `pip install --require-hashes`; actions de GitHub fijadas por SHA; gitleaks verificado por checksum |
-| Secreto publicado en el repositorio | todo el historial de git | filtración de credenciales | gitleaks sobre todo el historial; *secret scanning* y *push protection* de GitHub |
+| Secreto publicado en el repositorio | todo el historial de git | filtración de credenciales | gitleaks sobre todo el historial del commit que se integra (no sobre otras ramas: un secreto en una rama ajena no debe rechazar un PR sano); *secret scanning* y *push protection* de GitHub, que sí miran todas las ramas |
 | Patrón de código inseguro | `src/`, `viz/`, `bench/`, `data/` | inyección, uso indebido de criptografía | Bandit y CodeQL |
 | Entrada maliciosa a la API | `viz/server.py` | errores no controlados, consumo excesivo | validación de tipos y rangos de FastAPI (`Query(ge=0)`), errores controlados; el servidor escucha solo en `127.0.0.1` |
 | Workflow de CI inseguro | `.github/workflows/` | robo del token del repositorio | permisos mínimos por job, `persist-credentials: false`, CodeQL sobre los workflows |
