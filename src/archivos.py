@@ -42,7 +42,8 @@ def generar_consultas(
     ruta: Path, n_nodos: int, cantidad: int, seed: int = 11, calientes: int = 5
 ) -> None:
     """Escribe un CSV de consultas sin armar la lista entera en memoria."""
-    rng = random.Random(seed)
+    # Datos de prueba reproducibles, sin uso criptografico (ver docs/seguridad.md).
+    rng = random.Random(seed)  # nosec B311
     fuentes = [rng.randrange(n_nodos) for _ in range(calientes)]
 
     def origen() -> int:
@@ -67,7 +68,7 @@ def leer_lotes(ruta: Path, tam_lote: int) -> Iterator[list[Query]]:
 def procesar_ingenuo(entrada: Path, salida: Path, resolver: Resolver) -> None:
     """Linea base: todo a memoria y una escritura (con flush) por fila."""
     lineas = Path(entrada).read_text().splitlines()[1:]
-    consultas = [tuple(map(int, linea.split(","))) for linea in lineas]
+    consultas = [(int(s), int(t)) for s, t in (linea.split(",") for linea in lineas)]
     respuestas = resolver(consultas)
     with open(salida, "w", buffering=1) as f:  # buffering=1: flush en cada linea
         f.write(",".join(CABECERA_SALIDA) + "\n")

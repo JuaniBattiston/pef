@@ -84,7 +84,8 @@ def descargar() -> dict:
             req = urllib.request.Request(
                 url, data=datos, headers={"User-Agent": "pef-parcial/1.0 (uso academico)"}
             )
-            with urllib.request.urlopen(req, timeout=240) as resp:
+            # URL fija https de ENDPOINTS, nunca viene del usuario (ver docs/seguridad.md).
+            with urllib.request.urlopen(req, timeout=240) as resp:  # nosec B310
                 crudo = json.loads(resp.read().decode())
             RAW.write_text(json.dumps(crudo))
             print(f"  descargado: {len(crudo.get('elements', []))} elementos")

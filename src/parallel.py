@@ -56,6 +56,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from dataclasses import dataclass
 
 from .algorithms import ALGORITHMS
+from .algorithms.base import Algorithm
 from .graph import Graph, generate
 
 Query = tuple[int, int]
@@ -86,7 +87,7 @@ class GraphSpec:
 # lectura, asi que compartirlo entre tareas del mismo worker es seguro.
 
 _WORKER_GRAPH: Graph | None = None
-_WORKER_ALGO = None
+_WORKER_ALGO: Algorithm | None = None
 
 
 def _init_worker(spec: GraphSpec, algo_name: str) -> None:
@@ -95,13 +96,15 @@ def _init_worker(spec: GraphSpec, algo_name: str) -> None:
     _WORKER_ALGO = ALGORITHMS[algo_name]
 
 
-def _answer(algo, graph: Graph, query: Query) -> Answer:
+def _answer(algo: Algorithm, graph: Graph, query: Query) -> Answer:
     """Resuelve una consulta y devuelve solo (costo, nodos del camino)."""
     res = algo(graph, query[0], query[1])
     return (res.cost, len(res.path))
 
 
 def _solve_in_worker(query: Query) -> Answer:
+    if _WORKER_ALGO is None or _WORKER_GRAPH is None:  # pragma: no cover
+        raise RuntimeError("worker sin inicializar: usar process_pool()")
     return _answer(_WORKER_ALGO, _WORKER_GRAPH, query)
 
 
@@ -129,7 +132,9 @@ def solve_threads(
         return list(ex.map(lambda q: _answer(algo, graph, q), queries))
 
 
-def process_pool(spec: GraphSpec, algo_name: str = "heap", workers: int | None = None):
+def process_pool(
+    spec: GraphSpec, algo_name: str = "heap", workers: int | None = None
+) -> ProcessPoolExecutor:
     """Crea un pool de procesos donde cada worker ya tiene el grafo construido.
 
     Se puede reutilizar para muchos lotes seguidos (ver `src/archivos.py`):
@@ -166,7 +171,8 @@ def make_queries(n_nodes: int, count: int, seed: int = 11, hot_sources: int = 0)
     origenes concentran el trafico. Es el escenario donde la cache rinde.
     Con hot_sources = 0 los origenes son uniformes: el peor caso para cachear.
     """
-    rng = random.Random(seed)
+    # Datos de prueba reproducibles, sin uso criptografico (ver docs/seguridad.md).
+    rng = random.Random(seed)  # nosec B311
     if hot_sources:
         sources = [rng.randrange(n_nodes) for _ in range(hot_sources)]
         return [(rng.choice(sources), rng.randrange(n_nodes)) for _ in range(count)]

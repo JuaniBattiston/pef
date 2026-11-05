@@ -4,7 +4,8 @@
 
 - Python 3.11+. El núcleo (`src/`) usa solo la biblioteca estándar; el visualizador
   usa FastAPI (`pip install -r requirements.txt`).
-- Herramientas de desarrollo (parte 2): `pip install -r requirements-dev.txt`
+- Herramientas de desarrollo y CI (parte 3, versiones fijadas con hashes): `pip install --require-hashes -r requirements-dev.txt`
+- Herramientas de perfilado de la parte 2 (Scalene, py-spy, Pyroscope): `pip install -r requirements-parte2.txt`
 - Ejecutar siempre desde la raíz del proyecto (la carpeta que contiene `src/`).
 
 ---

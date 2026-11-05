@@ -17,24 +17,25 @@ Uso:
 from __future__ import annotations
 
 import argparse
+from functools import partial
 from pathlib import Path
 
 from src.algorithms import ALGORITHMS
 from src.archivos import generar_consultas, procesar_archivo
 from src.cache import RouteCache
-from src.graph import FAMILIES, generate
+from src.graph import FAMILIES, Graph, generate
 from src.parallel import GraphSpec, make_queries, solve_processes, solve_sequential, solve_threads
 from src.timing import timed_ms
 
 
-def _extremos(args, g) -> tuple[int, int]:
+def _extremos(args: argparse.Namespace, g: Graph) -> tuple[int, int]:
     """Origen y destino pedidos, o por defecto el primer y el ultimo nodo."""
     src = args.origen if args.origen is not None else 0
     dst = args.destino if args.destino is not None else g.n - 1
     return src, dst
 
 
-def cmd_ruta(args) -> None:
+def cmd_ruta(args: argparse.Namespace) -> None:
     """Resuelve una consulta y muestra costo, camino y nodos expandidos."""
     g = generate(args.family, args.size, seed=args.seed)
     src, dst = _extremos(args, g)
@@ -53,7 +54,7 @@ def cmd_ruta(args) -> None:
     print(f"  camino          : {head}{' -> ...' if len(res.path) > 8 else ''}")
 
 
-def cmd_comparar(args) -> None:
+def cmd_comparar(args: argparse.Namespace) -> None:
     """Corre todos los algoritmos aplicables sobre el mismo par origen-destino."""
     g = generate(args.family, args.size, seed=args.seed)
     src, dst = _extremos(args, g)
@@ -66,14 +67,14 @@ def cmd_comparar(args) -> None:
     if not g.weighted:
         names.append("bfs")
     for name in names:
-        res, ms = timed_ms(lambda a=ALGORITHMS[name]: a(g, src, dst))
+        res, ms = timed_ms(partial(ALGORITHMS[name], g, src, dst))
         pct = 100 * res.expanded / g.n
         print(f"{name:16s} {ms:10.2f}ms {res.expanded:12d} {pct:8.1f}% {res.cost:12.4f}")
     print("\nLos costos deben coincidir: todos resuelven el camino minimo.")
     print("La diferencia esta en cuantos nodos hace falta expandir para hallarlo.")
 
 
-def cmd_simular(args) -> None:
+def cmd_simular(args: argparse.Namespace) -> None:
     """Demuestra la invalidacion de cache ante un cambio del mapa."""
     g = generate(args.family, args.size, seed=args.seed)
     cache = RouteCache(capacity=32)
@@ -105,7 +106,7 @@ def cmd_simular(args) -> None:
         print("Se encontro un desvio del mismo costo; la cache igual se invalido.")
 
 
-def cmd_lote(args) -> None:
+def cmd_lote(args: argparse.Namespace) -> None:
     """Resuelve un lote de consultas en el modo de ejecucion elegido."""
     spec = GraphSpec(args.family, args.size, args.seed)
     g = spec.build()
@@ -125,14 +126,14 @@ def cmd_lote(args) -> None:
     print(f"  por consulta : {ms / args.n:.3f} ms")
 
 
-def cmd_generar_consultas(args) -> None:
+def cmd_generar_consultas(args: argparse.Namespace) -> None:
     """Escribe un CSV grande de consultas para probar `archivo`."""
     g = generate(args.family, args.size, seed=args.seed)
     _, ms = timed_ms(lambda: generar_consultas(Path(args.salida), g.n, args.n))
     print(f"{args.n} consultas -> {args.salida}  ({ms:.0f} ms)")
 
 
-def cmd_archivo(args) -> None:
+def cmd_archivo(args: argparse.Namespace) -> None:
     """Resuelve un CSV de consultas por lotes y escribe las respuestas."""
     spec = GraphSpec(args.family, args.size, args.seed)
     _, ms = timed_ms(
@@ -144,12 +145,12 @@ def cmd_archivo(args) -> None:
     print(f"{args.entrada} -> {args.salida}  lote={args.lote} modo={modo}  {ms:.0f} ms")
 
 
-def main(argv=None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """Arma los subcomandos y ejecuta el elegido."""
     p = argparse.ArgumentParser(description="Planificador inteligente de rutas")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    def common(sp):
+    def common(sp: argparse.ArgumentParser) -> argparse.ArgumentParser:
         sp.add_argument("--family", default="grid", choices=sorted(FAMILIES))
         sp.add_argument("--size", type=int, default=4000)
         sp.add_argument("--seed", type=int, default=42)

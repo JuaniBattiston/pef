@@ -14,9 +14,17 @@ Convencion compartida por los cuatro algoritmos
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from ..graph import Graph
 
 INF = float("inf")
+
+OnExpand = Callable[[int], object]
+"""Callback que recibe cada nodo al cerrarlo (lo usa el visualizador)."""
 
 
 @dataclass
@@ -38,6 +46,16 @@ class SearchResult:
     def reachable(self) -> bool:
         """Indica si existe camino entre origen y destino."""
         return self.cost < INF
+
+
+class Algorithm(Protocol):
+    """Firma comun de los cuatro algoritmos de busqueda."""
+
+    def __call__(
+        self, graph: Graph, source: int, target: int, on_expand: OnExpand | None = None
+    ) -> SearchResult:
+        """Camino minimo de `source` a `target`."""
+        ...
 
 
 def rebuild_path(parent: list[int], source: int, target: int) -> list[int]:

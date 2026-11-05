@@ -1,0 +1,6 @@
+# Herramientas usadas solo en la parte 2 (perfilado y APM). No entran al CI.
+# Scalene: usar 1.5.51 con Python 3.12 (ver resultados-parte-2/perfilado/LEEME.md).
+scalene
+py-spy
+snakeviz
+pyroscope-io

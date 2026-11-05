@@ -1,0 +1,25 @@
+# Herramientas de desarrollo y de CI (parte 3). Regenerar el lock con:  make lock
+-r requirements.in
+-c requirements.txt
+
+# Pruebas, cobertura y rendimiento
+pytest
+pytest-cov
+pytest-benchmark
+httpx2           # TestClient de FastAPI (Starlette depreco httpx)
+pyinstrument
+
+# Calidad estatica
+ruff
+pylint
+mypy
+radon
+xenon
+
+# Seguridad
+bandit[sarif]
+pip-audit
+
+# Documentacion
+mkdocs-material
+mkdocstrings[python]

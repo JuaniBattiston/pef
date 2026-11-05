@@ -27,10 +27,12 @@ domina en la practica es (b) por la constante alta del barrido de aristas.
 from __future__ import annotations
 
 from ..graph import Graph
-from .base import INF, SearchResult, rebuild_path
+from .base import INF, OnExpand, SearchResult, rebuild_path
 
 
-def dijkstra_naive(graph: Graph, source: int, target: int, on_expand=None) -> SearchResult:
+def dijkstra_naive(
+    graph: Graph, source: int, target: int, on_expand: OnExpand | None = None
+) -> SearchResult:
     """Dijkstra baseline: minimo por barrido lineal y vecinos por lista plana."""
     n = graph.n
     dist = [INF] * n

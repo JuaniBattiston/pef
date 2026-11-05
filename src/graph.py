@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import math
 import random
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 
@@ -53,6 +54,9 @@ class Graph:
     weighted: bool = True
     heuristic_scale: float = 1.0
     family: str = "custom"
+    # Solo para mapas reales (src/osm.py): coordenadas geograficas y nombre.
+    latlon: list[tuple[float, float]] | None = None
+    ciudad: str | None = None
 
     def __post_init__(self) -> None:
         if not self.adj:
@@ -129,7 +133,7 @@ def _set_weight(neighbors: list[tuple[int, float]], node: int, new_w: float) -> 
 # midiendo sobre topologias diferentes.
 
 
-def _grid_coords(side: int, rng: random.Random, jitter: float = 0.25):
+def _grid_coords(side: int, rng: random.Random, jitter: float = 0.25) -> list[tuple[float, float]]:
     """Grilla side x side con ruido, para que no sea perfectamente regular."""
     return [
         (x + rng.uniform(-jitter, jitter), y + rng.uniform(-jitter, jitter))
@@ -142,12 +146,13 @@ def _side_for(n_target: int) -> int:
     return max(2, int(round(math.sqrt(n_target))))
 
 
-def grid(n_target: int, seed: int = 42, factor_range=(1.0, 1.2)) -> Graph:
+def grid(n_target: int, seed: int = 42, factor_range: tuple[float, float] = (1.0, 1.2)) -> Graph:
     """Malla urbana. Planar, grado <= 4, E ~ 2V.
 
     Heuristica euclidea muy informativa -> es donde A* deberia brillar.
     """
-    rng = random.Random(seed)
+    # Datos de prueba reproducibles, sin uso criptografico (ver docs/seguridad.md).
+    rng = random.Random(seed)  # nosec B311
     side = _side_for(n_target)
     n = side * side
     g = Graph(n=n, coords=_grid_coords(side, rng), family="grid")
@@ -171,7 +176,8 @@ def highway(n_target: int, seed: int = 42, shortcut_ratio: float = 0.05) -> Grap
     (factor >= 1) pero mucho menos informativa: subestima fuerte. A* deberia
     degradarse hacia Dijkstra. Es el caso interesante para la presentacion.
     """
-    rng = random.Random(seed)
+    # Datos de prueba reproducibles, sin uso criptografico (ver docs/seguridad.md).
+    rng = random.Random(seed)  # nosec B311
     g = grid(n_target, seed=seed, factor_range=(1.0, 4.0))
     g.family = "highway"
     extra = int(g.n * shortcut_ratio)
@@ -192,7 +198,8 @@ def dense(n_target: int, seed: int = 42, avg_degree: float | None = None) -> Gra
 
     Ojo con el tamano: E crece con V^2, no lo uses por encima de ~5k nodos.
     """
-    rng = random.Random(seed)
+    # Datos de prueba reproducibles, sin uso criptografico (ver docs/seguridad.md).
+    rng = random.Random(seed)  # nosec B311
     n = n_target
     coords = [(rng.uniform(0, math.sqrt(n)), rng.uniform(0, math.sqrt(n))) for _ in range(n)]
     g = Graph(n=n, coords=coords, family="dense")
@@ -243,7 +250,7 @@ def unweighted(n_target: int, seed: int = 42) -> Graph:
     return g
 
 
-FAMILIES = {
+FAMILIES: dict[str, Callable[..., Graph]] = {
     "grid": grid,
     "highway": highway,
     "dense": dense,

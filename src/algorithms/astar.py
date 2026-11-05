@@ -34,10 +34,12 @@ from __future__ import annotations
 import heapq
 
 from ..graph import Graph
-from .base import INF, SearchResult, rebuild_path
+from .base import INF, OnExpand, SearchResult, rebuild_path
 
 
-def astar(graph: Graph, source: int, target: int, on_expand=None) -> SearchResult:
+def astar(
+    graph: Graph, source: int, target: int, on_expand: OnExpand | None = None
+) -> SearchResult:
     """A* de `source` a `target` con heuristica euclidea admisible."""
     g_score = [INF] * graph.n
     parent = [-1] * graph.n

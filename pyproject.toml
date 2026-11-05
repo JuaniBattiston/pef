@@ -29,3 +29,11 @@ convention = "google"
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]
 "bench/*" = ["D103"]
+
+[tool.mypy]
+# Politica de tipado (parte 3): todo src/ anotado; cualquier error bloquea el CI.
+files = ["src"]
+python_version = "3.12"
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true

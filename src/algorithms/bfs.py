@@ -26,10 +26,10 @@ from __future__ import annotations
 from collections import deque
 
 from ..graph import Graph
-from .base import INF, SearchResult, rebuild_path
+from .base import INF, OnExpand, SearchResult, rebuild_path
 
 
-def bfs(graph: Graph, source: int, target: int, on_expand=None) -> SearchResult:
+def bfs(graph: Graph, source: int, target: int, on_expand: OnExpand | None = None) -> SearchResult:
     """BFS de `source` a `target`. Solo valido si todas las aristas pesan igual."""
     if graph.weighted:
         raise ValueError(

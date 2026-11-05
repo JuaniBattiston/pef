@@ -1,0 +1,5 @@
+# Dependencias de ejecucion. El nucleo (src/) usa solo la biblioteca estandar;
+# esto es lo que necesita el visualizador web (viz/server.py).
+# Editar este archivo y regenerar el lock con:  make lock
+fastapi
+uvicorn

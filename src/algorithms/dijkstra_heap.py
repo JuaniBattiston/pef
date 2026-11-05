@@ -46,10 +46,12 @@ from __future__ import annotations
 import heapq
 
 from ..graph import Graph
-from .base import INF, SearchResult, rebuild_path
+from .base import INF, OnExpand, SearchResult, rebuild_path
 
 
-def _search(graph: Graph, source: int, target: int, on_expand=None):
+def _search(
+    graph: Graph, source: int, target: int | None, on_expand: OnExpand | None = None
+) -> tuple[list[float], list[int], int, dict[str, int]]:
     """Bucle de Dijkstra con heap, con corte temprano al llegar a `target`."""
     dist = [INF] * graph.n
     parent = [-1] * graph.n
@@ -82,7 +84,9 @@ def _search(graph: Graph, source: int, target: int, on_expand=None):
     return dist, parent, expanded, stats
 
 
-def dijkstra_heap(graph: Graph, source: int, target: int, on_expand=None) -> SearchResult:
+def dijkstra_heap(
+    graph: Graph, source: int, target: int, on_expand: OnExpand | None = None
+) -> SearchResult:
     """Camino minimo de `source` a `target`, cortando al llegar al destino."""
     dist, parent, expanded, stats = _search(graph, source, target, on_expand)
     return SearchResult(
