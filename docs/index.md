@@ -66,7 +66,7 @@ tráfico en tiempo real ni persistencia en base de datos.
 
 | Sección | Contenido |
 | --- | --- |
-| [Arquitectura](arquitectura.md) | módulos, responsabilidades, dependencias y diagrama de componentes |
+| [Arquitectura](arquitectura-vieja.md) | módulos, responsabilidades, dependencias y diagrama de componentes |
 | [Instalación y ejecución](instalacion.md) | dependencias, configuración y comandos |
 | [Diseño técnico](diseno-tecnico.md) | estructuras de datos, algoritmos y decisiones de implementación |
 | [API y contratos](api.md) | CLI, API HTTP y API de Python: entradas, salidas, excepciones |
